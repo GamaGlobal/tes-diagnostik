@@ -911,10 +911,13 @@ function scoreCurrentSectionIfInProgress(){
   }
 }
 
+let phaseBeforeLock=null;
+
 function lockTest(){
   isLocked=true;
   disarmAntiCheat();
   clearInterval(timerHandle);
+  phaseBeforeLock=phase;
   scoreCurrentSectionIfInProgress();
   sendViolationNote();
   phase='locked';
@@ -959,8 +962,15 @@ function attemptUnlock(){
     cheatCount=0;
     armAntiCheat();
     requestFS();
-    phase='intro';
-    render();
+    if(phaseBeforeLock==='memorize'){
+      phase='memorize';
+      render();
+      startMemorizeTimer();
+    } else {
+      phase='test';
+      render();
+      startTestTimer();
+    }
   } else {
     alert('PIN salah. Coba lagi atau hubungi pengawas.');
   }
@@ -1123,6 +1133,10 @@ function startMemorize(){
   armGraceUntil=Date.now()+1500;
   secondsLeft=sections[curIdx].memorizeDuration;
   render();
+  startMemorizeTimer();
+}
+
+function startMemorizeTimer(){
   timerHandle=setInterval(()=>{
     secondsLeft--;
     const el=document.getElementById('timerDisplay');
@@ -1159,6 +1173,10 @@ function startTest(){
   secondsLeft=s.duration;
   userAnswers[s.id]=new Array(s.questions.length).fill(null);
   render();
+  startTestTimer();
+}
+
+function startTestTimer(){
   timerHandle=setInterval(()=>{
     secondsLeft--;
     const el=document.getElementById('timerDisplay');
@@ -1173,16 +1191,21 @@ function startTest(){
   },1000);
 }
 
+function selCls(sec,qIdx,oi){
+  const arr=userAnswers[sec.id];
+  return (arr && arr[qIdx]===oi) ? ' selected' : '';
+}
+
 function renderQOptions(sec,q,qIdx){
   if(q.kind==='text'){
     return '<div class="opt-list">'+
-      q.options.map((o,oi)=>'<div class="opt" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'"><span class="let">'+String.fromCharCode(65+oi)+'</span><span>'+o+'</span></div>').join('')+
+      q.options.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'"><span class="let">'+String.fromCharCode(65+oi)+'</span><span>'+o+'</span></div>').join('')+
     '</div>';
   }
   if(q.kind==='series'){
     return '<div class="shape-row"><strong style="font-size:1.15rem;">'+q.seq.join(', ')+', <span style="color:var(--accent-dark)">?</span></strong></div>'+
       '<div class="opt-list" style="grid-template-columns:repeat(4,1fr);display:grid;">'+
-      q.options.map((o,oi)=>'<div class="opt" style="justify-content:center;" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+o+'</div>').join('')+
+      q.options.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" style="justify-content:center;" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+o+'</div>').join('')+
       '</div>';
   }
   if(q.kind==='figural'){
@@ -1190,7 +1213,7 @@ function renderQOptions(sec,q,qIdx){
       q.seq.map(sh=>shapeSVG(sh.sides,sh.color,undefined,sh.rot)).join('')+
       '<span class="qm">?</span></div>'+
       '<div class="fig-opts">'+
-      q.options.map((o,oi)=>'<div class="opt" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+shapeSVG(o.sides,o.color,undefined,o.rot)+'</div>').join('')+
+      q.options.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+shapeSVG(o.sides,o.color,undefined,o.rot)+'</div>').join('')+
       '</div>';
   }
   if(q.kind==='cube'){
@@ -1206,13 +1229,13 @@ function renderQOptions(sec,q,qIdx){
       pos('Bottom',2,3)+
       '</div>'+
       '<div class="cube-opts">'+
-      q.options.map((o,oi)=>'<div class="opt" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+o+'</div>').join('')+
+      q.options.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+o+'</div>').join('')+
       '</div>';
   }
   if(q.kind==='likert'){
     const labels=sec.scaleLabels;
     return '<div class="opt-list">'+
-      labels.map((o,oi)=>'<div class="opt" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'"><span class="let">'+(oi+1)+'</span><span>'+o+'</span></div>').join('')+
+      labels.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'"><span class="let">'+(oi+1)+'</span><span>'+o+'</span></div>').join('')+
     '</div>';
   }
   return '';
@@ -1227,6 +1250,7 @@ function renderTest(){
       renderQOptions(s,q,qi)+
     '</div>';
   });
+  const answeredCount=(userAnswers[s.id]||[]).filter(a=>a!==null && a!==undefined).length;
   app.innerHTML=
   '<div class="top-bar">'+progressDots()+'<span style="display:flex;gap:8px;align-items:center;">'+
     (cheatCount>0?'<span class="timer low" style="font-size:0.85rem;">⚠ '+cheatCount+'/'+MAX_VIOLATIONS+'</span>':'')+
@@ -1234,8 +1258,8 @@ function renderTest(){
   '<div class="wrap">'+
     '<div class="card" style="padding:14px 16px;">'+
       '<strong>'+s.code+' — '+s.title+'</strong>'+
-      '<div class="progress-line"><div class="progress-fill" id="answeredBar" style="width:0%"></div></div>'+
-      '<span class="muted" id="answeredCount">0 / '+s.questions.length+' terjawab</span>'+
+      '<div class="progress-line"><div class="progress-fill" id="answeredBar" style="width:'+(answeredCount/s.questions.length*100)+'%"></div></div>'+
+      '<span class="muted" id="answeredCount">'+answeredCount+' / '+s.questions.length+' terjawab</span>'+
     '</div>'+
     '<div class="card">'+qHtml+'</div>'+
     '<button class="btn block secondary" onclick="confirmFinish()">Selesaikan Bagian Ini Lebih Awal</button>'+
