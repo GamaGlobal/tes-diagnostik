@@ -19,6 +19,9 @@
     font-size:16px;
   }
   *{box-sizing:border-box;}
+  html{
+    overscroll-behavior-y:contain;
+  }
   body{
     margin:0;
     background:var(--bg);
@@ -26,6 +29,7 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing:antialiased;
     padding-bottom:40px;
+    overscroll-behavior-y:contain;
   }
   h1,h2,h3{font-family:Georgia,'Iowan Old Style',serif; margin:0 0 8px;}
   .no-select, .no-select *{
@@ -194,6 +198,8 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
 /* ============ KONFIGURASI ANTI-CURANG ============ */
 const SUPERVISOR_PIN = '246810'; /* ganti dengan PIN rahasia Anda sendiri */
 const MAX_VIOLATIONS = 3;
+const SESSION_KEY = 'tesDiagnostikSession_v1';
+const SESSION_MAX_AGE_MS = 6*60*60*1000; /* sesi tersimpan dianggap basi setelah 6 jam tidak aktif */
 
 let studentName='';
 let studentSchool='';
@@ -893,6 +899,76 @@ let cheatCount=0;
 let cheatLog=[];
 let antiCheatArmed=false;
 let violationCooldown=false;
+let phaseBeforeLock=null;
+
+/* ============ PENYIMPANAN SESI (agar tahan refresh tidak sengaja) ============ */
+function saveSession(){
+  if(phase==='welcome' || phase==='final' || phase==='resumePrompt') return;
+  try{
+    const snapshot={
+      sections, curIdx, phase, secondsLeft,
+      userAnswers, sectionScores,
+      studentName, studentSchool, studentClass,
+      currentLevel, selectedModules,
+      cheatCount, cheatLog, phaseBeforeLock, isLocked,
+      savedAt:Date.now()
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(snapshot));
+  }catch(e){ /* localStorage penuh/tidak tersedia — abaikan diam-diam */ }
+}
+function loadSavedSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const data=JSON.parse(raw);
+    if(!data || !data.savedAt || (Date.now()-data.savedAt)>SESSION_MAX_AGE_MS) { localStorage.removeItem(SESSION_KEY); return null; }
+    if(!data.sections || !data.sections.length) return null;
+    return data;
+  }catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+}
+
+function resumeSession(data){
+  sections=data.sections;
+  curIdx=data.curIdx;
+  userAnswers=data.userAnswers;
+  sectionScores=data.sectionScores;
+  studentName=data.studentName;
+  studentSchool=data.studentSchool;
+  studentClass=data.studentClass;
+  currentLevel=data.currentLevel;
+  selectedModules=data.selectedModules;
+  cheatCount=data.cheatCount||0;
+  cheatLog=data.cheatLog||[];
+  phaseBeforeLock=data.phaseBeforeLock;
+  isLocked=!!data.isLocked;
+
+  const elapsedSec=Math.floor((Date.now()-data.savedAt)/1000);
+  secondsLeft=Math.max(0, data.secondsLeft-elapsedSec);
+
+  if(data.phase==='locked'){
+    phase='locked';
+    render();
+  } else if(data.phase==='memorize' || data.phase==='test'){
+    phase=data.phase;
+    armAntiCheat();
+    requestFS();
+    if(secondsLeft<=0){
+      /* waktu sudah habis selagi halaman tertutup/refresh */
+      render();
+      if(data.phase==='memorize'){ startTest(); } else { finishSection(true); }
+    } else {
+      render();
+      if(data.phase==='memorize'){ startMemorizeTimer(); } else { startTestTimer(); }
+    }
+  } else {
+    /* intro */
+    phase='intro';
+    render();
+  }
+}
 
 function totalMinutes(){
   let s=0;
@@ -971,6 +1047,7 @@ function registerViolation(reason){
   cheatCount++;
   cheatLog.push(reason+' — '+new Date().toLocaleTimeString('id-ID'));
   playAlertSound();
+  saveSession();
 
   if(cheatHandle) clearTimeout(cheatHandle);
   const overlay=document.createElement('div');
@@ -1020,8 +1097,6 @@ function scoreCurrentSectionIfInProgress(){
   }
 }
 
-let phaseBeforeLock=null;
-
 function lockTest(){
   isLocked=true;
   disarmAntiCheat();
@@ -1030,6 +1105,7 @@ function lockTest(){
   scoreCurrentSectionIfInProgress();
   sendViolationNote();
   phase='locked';
+  saveSession();
   render();
 }
 
@@ -1075,10 +1151,12 @@ function attemptUnlock(){
     if(phaseBeforeLock==='memorize'){
       phase='memorize';
       render();
+      saveSession();
       startMemorizeTimer();
     } else {
       phase='test';
       render();
+      saveSession();
       startTestTimer();
     }
   } else {
@@ -1120,6 +1198,7 @@ window.addEventListener('beforeunload',(e)=>{
 
 function render(){
   if(phase==='welcome') return renderWelcome();
+  if(phase==='resumePrompt') return renderResumePrompt();
   if(phase==='intro') return renderIntro();
   if(phase==='memorize') return renderMemorize();
   if(phase==='test') return renderTest();
@@ -1127,9 +1206,39 @@ function render(){
   if(phase==='final') return renderFinal();
 }
 
+let pendingResume=null;
+
+function renderResumePrompt(){
+  const d=pendingResume;
+  const nama=d.studentName||'-';
+  app.innerHTML=
+  '<div class="wrap">'+
+    '<div class="card center" style="margin-top:40px;">'+
+      '<div class="badge">↺</div>'+
+      '<h2>Sesi Tes Sebelumnya Ditemukan</h2>'+
+      '<p class="muted">Sepertinya halaman sempat ter-refresh atau tertutup. Progres tes atas nama <strong>'+nama+'</strong> masih tersimpan.</p>'+
+      '<button class="btn block" style="margin-top:14px;" onclick="continueResumedSession()">Lanjutkan Tes</button>'+
+      '<button class="btn block secondary" style="margin-top:10px;" onclick="discardResumedSession()">Mulai dari Awal (Hapus Progres)</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function continueResumedSession(){
+  const d=pendingResume;
+  pendingResume=null;
+  resumeSession(d);
+}
+
+function discardResumedSession(){
+  pendingResume=null;
+  clearSession();
+  phase='welcome';
+  render();
+}
+
 function renderWelcome(){
   const info=previewInfo(selectedLevel,selectedModules);
-  const anySelected=selectedModules.IST||selectedModules.RIASEC||selectedModules.GAYA;
+  const anySelected=selectedModules.IST||selectedModules.RIASEC||selectedModules.GAYA||selectedModules.BAKAT;
   const modBtn=(key,label,desc)=>
     '<div class="opt'+(selectedModules[key]?' selected':'')+'" onclick="toggleModule(\''+key+'\')">'+
     '<span class="let">'+(selectedModules[key]?'✓':'')+'</span>'+
@@ -1189,9 +1298,10 @@ function selectLevel(lvl){
 }
 
 function beginTest(){
-  if(!(selectedModules.IST||selectedModules.RIASEC||selectedModules.GAYA)) return;
+  if(!(selectedModules.IST||selectedModules.RIASEC||selectedModules.GAYA||selectedModules.BAKAT)) return;
   const nameVal=document.getElementById('inpName').value.trim();
   if(!nameVal){ alert('Mohon isi nama terlebih dahulu.'); return; }
+  clearSession();
   studentName=nameVal;
   studentSchool=document.getElementById('inpSchool').value.trim();
   studentClass=document.getElementById('inpClass').value.trim();
@@ -1206,6 +1316,7 @@ function beginTest(){
   requestFS();
   phase='intro';
   render();
+  saveSession();
 }
 
 function renderIntro(){
@@ -1245,6 +1356,7 @@ function startMemorize(){
   armGraceUntil=Date.now()+1500;
   secondsLeft=sections[curIdx].memorizeDuration;
   render();
+  saveSession();
   startMemorizeTimer();
 }
 
@@ -1254,6 +1366,7 @@ function startMemorizeTimer(){
     const el=document.getElementById('timerDisplay');
     if(el) el.textContent=fmt(secondsLeft);
     if(secondsLeft<=10 && el) el.classList.add('low');
+    saveSession();
     if(secondsLeft<=0){
       clearInterval(timerHandle);
       startTest();
@@ -1285,6 +1398,7 @@ function startTest(){
   secondsLeft=s.duration;
   userAnswers[s.id]=new Array(s.questions.length).fill(null);
   render();
+  saveSession();
   startTestTimer();
 }
 
@@ -1296,6 +1410,7 @@ function startTestTimer(){
       el.textContent=fmt(secondsLeft);
       if(secondsLeft<=30) el.classList.add('low');
     }
+    saveSession();
     if(secondsLeft<=0){
       clearInterval(timerHandle);
       finishSection(true);
@@ -1391,6 +1506,7 @@ function selectAnswer(qIdx,optIdx){
   const label=document.getElementById('answeredCount');
   if(bar) bar.style.width=(answeredCount/s.questions.length*100)+'%';
   if(label) label.textContent=answeredCount+' / '+s.questions.length+' terjawab';
+  saveSession();
 }
 
 function confirmFinish(){
@@ -1456,7 +1572,7 @@ function showTransition(title,subtitle){
   setTimeout(()=>{
     overlay.remove();
     curIdx++;
-    if(curIdx>=sections.length){ phase='final'; disarmAntiCheat(); } else { phase='intro'; }
+    if(curIdx>=sections.length){ phase='final'; disarmAntiCheat(); } else { phase='intro'; saveSession(); }
     render();
   },1600);
 }
@@ -1543,6 +1659,7 @@ function renderFinal(){
   computeResults();
   lastResults.status='Selesai Normal';
   if(!finalSaved){ finalSaved=true; saveToSheet(); }
+  clearSession();
 
   app.innerHTML=
   '<div class="wrap">'+
@@ -1568,6 +1685,11 @@ function saveToSheet(){
   });
 }
 
+const savedSession=loadSavedSession();
+if(savedSession){
+  pendingResume=savedSession;
+  phase='resumePrompt';
+}
 render();
 </script>
 </body>
