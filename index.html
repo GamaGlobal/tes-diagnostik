@@ -169,6 +169,18 @@
     letter-spacing:4px;margin:14px 0 8px;
   }
   .violation-log{text-align:left;font-size:0.85rem;color:#B9C0C7;max-height:160px;overflow-y:auto;background:#2B303A;border-radius:8px;padding:10px;margin-top:14px;}
+  .confirm-overlay{
+    position:fixed;inset:0;z-index:105;
+    background:rgba(32,36,43,0.75);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .confirm-card{
+    background:var(--panel);border-radius:12px;padding:24px 20px;
+    max-width:380px;width:100%;text-align:center;
+  }
+  .confirm-card .btn-row{display:flex;gap:10px;margin-top:16px;}
+  .confirm-card .btn-row .btn{flex:1;}
 </style>
 </head>
 <body>
@@ -1047,6 +1059,7 @@ function renderLocked(){
     '<h2 style="color:#fff;">Tes Terkunci</h2>'+
     '<p class="muted" style="color:#B9C0C7;">Terdeteksi '+cheatCount+' pelanggaran selama tes berlangsung (batas maksimal '+MAX_VIOLATIONS+'x). Sebuah catatan pelanggaran telah dikirim ke panitia. Hubungi pengawas untuk membuka kembali dan melanjutkan tes.</p>'+
     '<input id="pinInput" type="password" inputmode="numeric" placeholder="Masukkan PIN Pengawas">'+
+    '<p id="pinError" style="color:#E08A7D;font-size:0.85rem;min-height:18px;margin:4px 0 0;"></p>'+
     '<button class="btn block" onclick="attemptUnlock()">Buka Kunci & Lanjutkan Tes</button>'+
     '<div class="violation-log">'+cheatLog.map(l=>'<div>• '+l+'</div>').join('')+'</div>'+
   '</div></div>';
@@ -1069,7 +1082,8 @@ function attemptUnlock(){
       startTestTimer();
     }
   } else {
-    alert('PIN salah. Coba lagi atau hubungi pengawas.');
+    const err=document.getElementById('pinError');
+    if(err) err.textContent='PIN salah. Coba lagi atau hubungi pengawas.';
   }
 }
 
@@ -1384,9 +1398,19 @@ function confirmFinish(){
   const msg = s.scoring==='category' ?
     'Selesaikan bagian ini sekarang? Pernyataan yang belum dijawab tidak akan dihitung.' :
     'Selesaikan subtes ini sekarang? Jawaban yang belum diisi akan dianggap salah.';
-  if(confirm(msg)){
-    finishSection(false);
-  }
+  const overlay=document.createElement('div');
+  overlay.className='confirm-overlay';
+  overlay.innerHTML=
+    '<div class="confirm-card">'+
+      '<p style="margin:0;">'+msg+'</p>'+
+      '<div class="btn-row">'+
+        '<button class="btn secondary" id="confirmNo">Batal</button>'+
+        '<button class="btn" id="confirmYes">Ya, Selesaikan</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('confirmNo').onclick=()=>{ overlay.remove(); };
+  document.getElementById('confirmYes').onclick=()=>{ overlay.remove(); finishSection(false); };
 }
 
 function finishSection(auto){
