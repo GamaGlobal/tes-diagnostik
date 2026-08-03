@@ -177,7 +177,7 @@
 <script>
 /* ============ KONFIGURASI GOOGLE SHEETS ============ */
 /* Tempel URL Web App Apps Script Anda di sini setelah deploy (lihat Code.gs) */
-const GAS_URL = 'PASTE_URL_WEB_APP_ANDA_DI_SINI';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8adeoOQpxhRjscdcLIE8qNNZOPsTcuZAAtwGzw8ytlUVjxRB/exec';
 
 /* ============ KONFIGURASI ANTI-CURANG ============ */
 const SUPERVISOR_PIN = '246810'; /* ganti dengan PIN rahasia Anda sendiri */
@@ -696,6 +696,91 @@ function buildGayaSection(){
     questions};
 }
 
+/* ============ MODUL: TES BAKAT DIFERENSIAL (REKOMENDASI MAPEL PILIHAN) ============ */
+const BAKAT_LABELS={
+  MIPA:'Matematika & Sains (MIPA)',
+  IPS:'Ilmu Pengetahuan Sosial (IPS)',
+  BHS:'Bahasa & Sastra',
+  INF:'Informatika & Logika Komputasi',
+  VOK:'Vokasi & Keterampilan Teknis'
+};
+const BAKAT_DESC={
+  MIPA:'Kuat di penalaran matematis & sains. Mapel pilihan yang relevan: Matematika Tingkat Lanjut, Fisika, Kimia, Biologi.',
+  IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Mapel pilihan yang relevan: Sosiologi, Ekonomi, Geografi, Antropologi.',
+  BHS:'Kuat di bahasa & sastra. Mapel pilihan yang relevan: Bahasa Inggris Tingkat Lanjut, Bahasa/Sastra Indonesia Tingkat Lanjut, Bahasa asing pilihan.',
+  INF:'Kuat di logika komputasional. Mapel pilihan yang relevan: Informatika.',
+  VOK:'Kuat di keterampilan teknis-praktis. Mapel pilihan yang relevan: mata pelajaran Vokasi/Prakarya sesuai bidang keahlian.'
+};
+const BAKAT_RAW=[
+["MIPA","Jika sebuah benda jatuh bebas, kecepatannya akan ... seiring waktu.",["Tetap","Berkurang","Bertambah","Acak"],2],
+["MIPA","8 : 4 = 16 : ?",["6","8","10","12"],1],
+["MIPA","Jika air dipanaskan hingga 100°C pada tekanan normal, air akan ....",["Membeku","Menguap","Memadat","Tidak berubah"],1],
+["MIPA","Suatu pola: 1, 1, 2, 3, 5, 8, ... angka berikutnya?",["11","12","13","14"],2],
+["MIPA","Logam yang dipanaskan cenderung ....",["Menyusut","Memuai","Tetap","Berubah warna saja"],1],
+["MIPA","Jika 3 apel + 2 apel = 5 apel, maka 3x + 2x = ?",["5","5x","x⁵","6x"],1],
+["MIPA","Manakah yang termasuk sumber energi terbarukan?",["Batu bara","Minyak bumi","Matahari","Gas alam"],2],
+["MIPA","Segitiga memiliki total sudut ....",["90°","180°","270°","360°"],1],
+["MIPA","Proses tumbuhan membuat makanan sendiri disebut ....",["Respirasi","Fotosintesis","Transpirasi","Fermentasi"],1],
+["MIPA","Jika kecepatan tetap dan jarak bertambah, maka waktu tempuh akan ....",["Berkurang","Bertambah","Tetap","Tidak berhubungan"],1],
+
+["IPS","Kegiatan jual-beli yang memengaruhi harga di pasar mengikuti hukum ....",["Gravitasi","Permintaan-penawaran","Kekekalan energi","Relativitas"],1],
+["IPS","Perpindahan penduduk dari desa ke kota disebut ....",["Urbanisasi","Migrasi internasional","Transmigrasi","Reboisasi"],0],
+["IPS","Lembaga yang mengatur hubungan antarnegara disebut ....",["PBB","OSIS","MPR","BUMN"],0],
+["IPS","Sistem ekonomi yang mengandalkan mekanisme pasar disebut ....",["Sosialis","Kapitalis","Tradisional","Barter"],1],
+["IPS","Konflik yang terjadi karena perbedaan pandangan dalam masyarakat disebut konflik ....",["Sosial","Fisik","Alam","Teknis"],0],
+["IPS","Peta yang menunjukkan persebaran penduduk disebut peta ....",["Topografi","Demografi","Geologi","Klimatologi"],1],
+["IPS","Sikap saling menghormati antarbudaya disebut ....",["Etnosentrisme","Toleransi","Diskriminasi","Individualisme"],1],
+["IPS","Faktor yang memengaruhi inflasi antara lain ....",["Jumlah uang beredar","Suhu udara","Jumlah hewan","Curah hujan"],0],
+["IPS","Pembagian kerja dalam masyarakat berdasarkan keahlian disebut ....",["Stratifikasi","Spesialisasi","Mobilisasi","Urbanisasi"],1],
+["IPS","Bentuk kerja sama ekonomi antarnegara ASEAN disebut ....",["AFTA","NATO","Uni Eropa","G7"],0],
+
+["BHS","Sinonim dari kata \"cerdas\" adalah ....",["Bodoh","Pandai","Malas","Lambat"],1],
+["BHS","Antonim dari kata \"gembira\" adalah ....",["Senang","Bahagia","Sedih","Riang"],2],
+["BHS","Kalimat yang menggunakan majas adalah ....",["Dia makan nasi","Hatinya sekeras batu","Ibu pergi ke pasar","Buku itu tebal"],1],
+["BHS","\"Meskipun hujan deras, ia tetap berangkat sekolah.\" Kata \"meskipun\" menunjukkan hubungan ....",["Sebab-akibat","Pertentangan","Tujuan","Waktu"],1],
+["BHS","Karya sastra berbentuk naratif panjang disebut ....",["Puisi","Novel","Pantun","Sajak"],1],
+["BHS","Kata baku dari \"gimana\" adalah ....",["Bagaimana","Begini","Begitu","Kayak gitu"],0],
+["BHS","Paragraf yang bertujuan meyakinkan pembaca disebut paragraf ....",["Narasi","Deskripsi","Argumentasi","Eksposisi"],2],
+["BHS","Ungkapan \"buah tangan\" berarti ....",["Buah asli","Oleh-oleh","Tangan kanan","Hasil kerja"],1],
+["BHS","Fungsi tanda titik dua (:) dalam kalimat adalah ....",["Mengakhiri kalimat","Memisahkan rincian","Menyatakan pertanyaan","Menyatakan seruan"],1],
+["BHS","Kalimat efektif adalah kalimat yang ....",["Panjang dan rumit","Jelas dan tidak ambigu","Menggunakan banyak istilah asing","Diulang-ulang"],1],
+
+["INF","Jika A benar dan B salah, maka \"A DAN B\" bernilai ....",["Benar","Salah","Tidak tentu","Keduanya"],1],
+["INF","Urutan langkah sistematis untuk menyelesaikan masalah disebut ....",["Database","Algoritma","Interface","Firewall"],1],
+["INF","Bilangan biner 101 setara dengan desimal ....",["3","4","5","6"],2],
+["INF","Pola: input 2 → output 4; input 3 → output 9. Aturannya adalah ....",["x+2","x²","2x","x-1"],1],
+["INF","Perangkat yang menyimpan data secara permanen adalah ....",["RAM","Harddisk","Cache","Monitor"],1],
+["INF","Jika X = 5 dan Y = X+3, maka nilai Y adalah ....",["5","8","3","15"],1],
+["INF","Struktur perulangan dalam pemrograman disebut ....",["Sequence","Loop","Variabel","Fungsi"],1],
+["INF","Simbol yang biasa mewakili \"keputusan\" dalam flowchart berbentuk ....",["Persegi","Lingkaran","Belah ketupat","Segitiga"],2],
+["INF","Manakah yang BUKAN bahasa pemrograman?",["Python","HTML murni","Java","C++"],1],
+["INF","Jika kondisi \"benar\", program menjalankan perintah di dalam blok ....",["Else","If","Print","Exit"],1],
+
+["VOK","Alat yang digunakan untuk mengukur panjang secara presisi adalah ....",["Jangka sorong","Termometer","Barometer","Amperemeter"],0],
+["VOK","Jika roda gigi kecil berputar cepat menggerakkan roda gigi besar, roda besar akan berputar ....",["Lebih cepat","Lebih lambat","Sama cepat","Berhenti"],1],
+["VOK","Bahan yang bersifat konduktor listrik adalah ....",["Kayu","Plastik","Tembaga","Karet"],2],
+["VOK","Fungsi utama sekring pada instalasi listrik adalah ....",["Menambah daya","Mengamankan dari korsleting","Menghemat listrik","Mempercepat arus"],1],
+["VOK","Dalam menjahit, alat yang digunakan untuk mengukur pola adalah ....",["Gunting","Pita ukur","Jarum","Benang"],1],
+["VOK","Proses mengubah bentuk logam dengan panas disebut ....",["Pengelasan","Penempaan","Pengecatan","Pelapisan"],1],
+["VOK","Jika dua gaya bekerja berlawanan arah dengan besar sama, benda akan ....",["Bergerak cepat","Diam/seimbang","Berputar","Hancur"],1],
+["VOK","Alat pelindung diri (APD) wajib dipakai saat kerja bengkel untuk ....",["Bergaya","Keselamatan kerja","Formalitas","Tidak penting"],1],
+["VOK","Sistem yang mengatur aliran air ke seluruh bangunan disebut instalasi ....",["Elektrikal","Plambing","Mekanikal","Struktural"],1],
+["VOK","Kayu yang telah dikeringkan bertujuan agar ....",["Lebih berat","Tidak mudah menyusut/melengkung","Berubah warna","Lebih murah"],1]
+];
+function buildBakatSection(){
+  const questions=shuffle(BAKAT_RAW.map(([category,q,options,answer])=>{
+    const mc=shuffledMC(q,options,answer);
+    mc.category=category;
+    return mc;
+  }));
+  return {id:'BAKAT',title:'Tes Bakat Diferensial',code:'BAKAT',module:'BAKAT',scoring:'aptitude',
+    desc:'Mengukur kecenderungan bakat di 5 rumpun untuk merekomendasikan mata pelajaran pilihan Kurikulum Merdeka.',
+    instruction:'Kerjakan tiap soal sebaik mungkin — ini tes kemampuan (ada jawaban benar), bukan tes minat.',
+    example:{q:'Contoh: Sinonim dari kata "besar" adalah ....',options:['Kecil','Raksasa','Sempit','Pendek'],answer:1},
+    duration:900,
+    questions};
+}
+
 /* ============ BUILD SECTIONS ============ */
 const DURATIONS={
   smp:{SE:360,WA:360,AN:420,GE:480,RA:600,ZR:600,FA:420,WU:540,MEMORIZE:180,ME:360},
@@ -775,6 +860,7 @@ function buildSections(level,modules){
   if(modules.IST) result=result.concat(istSections);
   if(modules.RIASEC) result.push(buildRiasecSection());
   if(modules.GAYA) result.push(buildGayaSection());
+  if(modules.BAKAT) result.push(buildBakatSection());
   return result;
 }
 
@@ -789,7 +875,7 @@ let userAnswers={};
 let sectionScores={};
 let selectedLevel='sma';
 let currentLevel='sma';
-let selectedModules={IST:true,RIASEC:true,GAYA:true};
+let selectedModules={IST:true,RIASEC:true,GAYA:true,BAKAT:true};
 
 let cheatCount=0;
 let cheatLog=[];
@@ -904,6 +990,17 @@ function scoreCurrentSectionIfInProgress(){
       byCategory[q.category].sum+=val; byCategory[q.category].count+=1;
     });
     sectionScores[s.id]={byCategory};
+  } else if(s.scoring==='aptitude'){
+    const byCategory={};
+    let correct=0;
+    s.questions.forEach((q,idx)=>{
+      const isCorrect=arr[idx]===q.answer;
+      if(isCorrect) correct++;
+      if(!byCategory[q.category]) byCategory[q.category]={correct:0,count:0};
+      byCategory[q.category].count+=1;
+      if(isCorrect) byCategory[q.category].correct+=1;
+    });
+    sectionScores[s.id]={byCategory,correct};
   } else {
     let correct=0;
     s.questions.forEach((q,idx)=>{ if(arr[idx]===q.answer) correct++; });
@@ -1036,6 +1133,7 @@ function renderWelcome(){
         modBtn('IST','Tes IST (Kecerdasan)','Verbal, numerik, figural, memori — estimasi IQ')+
         modBtn('RIASEC','Tes Minat RIASEC','36 pernyataan minat karier (model Holland)')+
         modBtn('GAYA','Tes Gaya Belajar','24 pernyataan gaya belajar Visual/Auditori/Kinestetik')+
+        modBtn('BAKAT','Tes Bakat Diferensial','50 soal kemampuan — merekomendasikan mapel pilihan Kurikulum Merdeka')+
       '</div>'+
     '</div>'+
     (selectedModules.IST ?
@@ -1306,6 +1404,18 @@ function finishSection(auto){
     sectionScores[s.id]={byCategory};
     const answeredCount=arr.filter(a=>a!==null).length;
     showTransition(auto ? 'Waktu Habis' : 'Modul Selesai', s.title+' — '+answeredCount+' dari '+s.questions.length+' pernyataan dijawab');
+  } else if(s.scoring==='aptitude'){
+    const byCategory={};
+    let correct=0;
+    s.questions.forEach((q,idx)=>{
+      const isCorrect=arr[idx]===q.answer;
+      if(isCorrect) correct++;
+      if(!byCategory[q.category]) byCategory[q.category]={correct:0,count:0};
+      byCategory[q.category].count+=1;
+      if(isCorrect) byCategory[q.category].correct+=1;
+    });
+    sectionScores[s.id]={byCategory,correct};
+    showTransition(auto ? 'Waktu Habis' : 'Modul Selesai', s.title+' — '+correct+' dari '+s.questions.length+' benar');
   } else {
     let correct=0;
     s.questions.forEach((q,idx)=>{ if(arr[idx]===q.answer) correct++; });
@@ -1344,6 +1454,7 @@ function computeResults(){
   const istSections=sections.filter(s=>s.module==='IST');
   const riasecSection=sections.find(s=>s.id==='RIASEC');
   const gayaSection=sections.find(s=>s.id==='GAYA');
+  const bakatSection=sections.find(s=>s.id==='BAKAT');
 
   lastResults={nama:studentName,sekolah:studentSchool,kelas:studentClass,cheatCount,cheatLog:cheatLog.join(' | ')};
 
@@ -1388,6 +1499,17 @@ function computeResults(){
     }).sort((a,b)=>b.pct-a.pct);
     lastResults.gayaScores=Object.fromEntries(rows.map(r=>[r.key,r.pct]));
     lastResults.gayaDominant=rows[0].key;
+  }
+
+  if(bakatSection){
+    const byCat=(sectionScores.BAKAT&&sectionScores.BAKAT.byCategory)||{};
+    const rows=Object.keys(BAKAT_LABELS).map(k=>{
+      const st=byCat[k]||{correct:0,count:1};
+      return {key:k,pct:Math.round(st.correct/st.count*100)};
+    }).sort((a,b)=>b.pct-a.pct);
+    lastResults.bakatScores=Object.fromEntries(rows.map(r=>[r.key,r.pct]));
+    lastResults.bakatTop=rows[0].key;
+    lastResults.bakatRekomendasi=BAKAT_DESC[rows[0].key];
   }
 }
 
