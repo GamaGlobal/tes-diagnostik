@@ -204,6 +204,7 @@ const SESSION_MAX_AGE_MS = 6*60*60*1000; /* sesi tersimpan dianggap basi setelah
 let studentName='';
 let studentSchool='';
 let studentClass='';
+let studentNIS='';
 
 /* ============ UTILITIES ============ */
 function shuffle(arr){
@@ -908,7 +909,7 @@ function saveSession(){
     const snapshot={
       sections, curIdx, phase, secondsLeft,
       userAnswers, sectionScores,
-      studentName, studentSchool, studentClass,
+      studentName, studentSchool, studentClass, studentNIS,
       currentLevel, selectedModules,
       cheatCount, cheatLog, phaseBeforeLock, isLocked,
       savedAt:Date.now()
@@ -938,6 +939,7 @@ function resumeSession(data){
   studentName=data.studentName;
   studentSchool=data.studentSchool;
   studentClass=data.studentClass;
+  studentNIS=data.studentNIS||'';
   currentLevel=data.currentLevel;
   selectedModules=data.selectedModules;
   cheatCount=data.cheatCount||0;
@@ -1118,6 +1120,7 @@ function sendViolationNote(){
     nama:studentName,
     sekolah:studentSchool,
     kelas:studentClass,
+    nis:studentNIS,
     status:'PELANGGARAN',
     catatan:'Melakukan pelanggaran sebanyak '+cheatCount+' kali (batas maksimal '+MAX_VIOLATIONS+'x)',
     cheatCount,
@@ -1278,12 +1281,13 @@ function renderWelcome(){
       '<h3 style="font-size:1rem;">Data Peserta</h3>'+
       '<input id="inpName" type="text" placeholder="Nama lengkap" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-size:1rem;margin-bottom:10px;">'+
       '<input id="inpSchool" type="text" placeholder="Asal sekolah" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-size:1rem;margin-bottom:10px;">'+
-      '<input id="inpClass" type="text" placeholder="Kelas" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-size:1rem;">'+
-      '<p class="muted" style="margin-top:10px;">Hasil tes akan tersimpan ke Google Sheets menggunakan data ini setelah tes selesai.</p>'+
+      '<input id="inpClass" type="text" placeholder="Kelas" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-size:1rem;margin-bottom:10px;">'+
+      '<input id="inpNIS" type="text" inputmode="numeric" maxlength="5" placeholder="5 digit terakhir NIS" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-size:1rem;letter-spacing:2px;">'+
+      '<p class="muted" style="margin-top:10px;">5 digit terakhir NIS digunakan untuk mengecek hasil nanti di halaman "Cek Hasil". Hasil tes akan tersimpan ke Google Sheets setelah tes selesai.</p>'+
       '<button class="btn block" style="margin-top:14px;" onclick="beginTest()"'+(anySelected?'':' disabled')+'>Mulai Tes</button>'+
       (anySelected?'':'<p class="muted" style="color:var(--warn);margin-top:8px;">Pilih minimal satu modul tes.</p>')+
     '</div>'+
-    '<p class="disclaimer">Simulasi ini disusun mengikuti format tes IST, RIASEC, dan gaya belajar VAK untuk keperluan latihan/prototipe, bukan salinan instrumen resmi berlisensi. Hasil yang ditampilkan (IQ, kode minat, gaya belajar) merupakan estimasi heuristik dari simulasi ini, bukan skor psikometri yang telah dinormakan secara resmi.</p>'+
+    '<p class="disclaimer">Instrumen ini dirancang dan diolah oleh tim LBB Gama Global dengan mengadaptasi struktur tes IST, RIASEC, dan VAK sebagai kerangka konseptual. Skor dan kategori yang dihasilkan bersifat estimatif dan heuristik, digunakan untuk kebutuhan pemetaan minat-bakat internal, bukan merupakan hasil tes psikometri resmi yang ternormakan (standardized-normed).</p>'+
   '</div>';
 }
 
@@ -1301,10 +1305,13 @@ function beginTest(){
   if(!(selectedModules.IST||selectedModules.RIASEC||selectedModules.GAYA||selectedModules.BAKAT)) return;
   const nameVal=document.getElementById('inpName').value.trim();
   if(!nameVal){ alert('Mohon isi nama terlebih dahulu.'); return; }
+  const nisVal=document.getElementById('inpNIS').value.trim();
+  if(!/^\d{5}$/.test(nisVal)){ alert('Mohon isi 5 digit terakhir NIS (angka saja).'); return; }
   clearSession();
   studentName=nameVal;
   studentSchool=document.getElementById('inpSchool').value.trim();
   studentClass=document.getElementById('inpClass').value.trim();
+  studentNIS=nisVal;
   currentLevel=selectedLevel;
   sections=buildSections(currentLevel,selectedModules);
   curIdx=0;
@@ -1317,7 +1324,33 @@ function beginTest(){
   phase='intro';
   render();
   saveSession();
+  startHeartbeat();
 }
+
+let heartbeatHandle=null;
+function startHeartbeat(){
+  if(heartbeatHandle) clearInterval(heartbeatHandle);
+  sendHeartbeat();
+  heartbeatHandle=setInterval(sendHeartbeat, 15000);
+}
+function stopHeartbeat(){
+  if(heartbeatHandle){ clearInterval(heartbeatHandle); heartbeatHandle=null; }
+}
+function sendHeartbeat(){
+  if(!GAS_URL || GAS_URL.indexOf('PASTE_URL')===0) return;
+  const s=sections[curIdx];
+  const answeredCount = s ? (userAnswers[s.id]||[]).filter(a=>a!==null && a!==undefined).length : 0;
+  const beat={
+    type:'heartbeat',
+    nama:studentName, sekolah:studentSchool, kelas:studentClass, nis:studentNIS,
+    tahap: s ? (s.code+' - '+s.title) : phase,
+    tahapKe: curIdx+1, totalTahap: sections.length,
+    soalTerjawab: answeredCount, totalSoal: s ? s.questions.length : 0,
+    cheatCount, timestamp:new Date().toISOString()
+  };
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify(beat)}).catch(err=>{
+    console.warn('Gagal mengirim heartbeat:', err);
+  });
 
 function renderIntro(){
   const s=sections[curIdx];
@@ -1591,12 +1624,21 @@ function classify(iq){
 }
 
 function computeResults(){
+  stopHeartbeat();
   const istSections=sections.filter(s=>s.module==='IST');
   const riasecSection=sections.find(s=>s.id==='RIASEC');
   const gayaSection=sections.find(s=>s.id==='GAYA');
   const bakatSection=sections.find(s=>s.id==='BAKAT');
 
-  lastResults={nama:studentName,sekolah:studentSchool,kelas:studentClass,cheatCount,cheatLog:cheatLog.join(' | ')};
+  lastResults={nama:studentName,sekolah:studentSchool,kelas:studentClass,nis:studentNIS,cheatCount,cheatLog:cheatLog.join(' | '),timestamp:new Date().toISOString()};
+
+  if(GAS_URL && GAS_URL.indexOf('PASTE_URL')!==0){
+    fetch(GAS_URL,{method:'POST',body:JSON.stringify({
+      type:'heartbeat', nama:studentName, sekolah:studentSchool, kelas:studentClass, nis:studentNIS,
+      tahap:'Selesai', tahapKe:sections.length, totalTahap:sections.length,
+      soalTerjawab:0, totalSoal:0, cheatCount, selesai:true, timestamp:new Date().toISOString()
+    })}).catch(()=>{});
+  }
 
   if(istSections.length){
     let totalCorrect=0, totalMax=0;
@@ -1669,6 +1711,7 @@ function renderFinal(){
       '<p class="muted">Terima kasih, '+studentName+'. Jawaban Anda telah tercatat.</p>'+
       '<p class="muted" style="margin-top:6px;">Hasil tes akan disampaikan oleh panitia/pengawas.</p>'+
     '</div>'+
+    '<p class="disclaimer">Catatan: Asesmen ini disusun oleh LBB Gama Global dengan mengacu pada prinsip-prinsip tes IST, RIASEC, dan gaya belajar VAK. Hasil yang tertera merupakan estimasi hasil olahan internal untuk tujuan pemetaan potensi dan minat, bukan skor psikometri resmi bersertifikat.</p>'+
     '<button class="btn block secondary" style="margin-top:10px;" onclick="location.reload()">Selesai</button>'+
   '</div>';
 }
