@@ -1331,7 +1331,7 @@ let heartbeatHandle=null;
 function startHeartbeat(){
   if(heartbeatHandle) clearInterval(heartbeatHandle);
   sendHeartbeat();
-  heartbeatHandle=setInterval(sendHeartbeat, 15000);
+  heartbeatHandle=setInterval(sendHeartbeat, 40000);
 }
 function stopHeartbeat(){
   if(heartbeatHandle){ clearInterval(heartbeatHandle); heartbeatHandle=null; }
@@ -1718,16 +1718,47 @@ function renderFinal(){
 }
 
 let lastResults=null;
+const PENDING_KEY='pendingResultSubmission_v1';
 
 function saveToSheet(){
   if(!GAS_URL || GAS_URL.indexOf('PASTE_URL')===0){
     console.warn('GAS_URL belum dikonfigurasi — hasil tidak dikirim ke Google Sheets.');
     return;
   }
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify(lastResults)}).catch(err=>{
-    console.error('Gagal mengirim hasil ke Google Sheets:', err);
-  });
+  try{ localStorage.setItem(PENDING_KEY, JSON.stringify(lastResults)); }catch(e){}
+  sendResultWithRetry_(lastResults, 3);
 }
+
+function sendResultWithRetry_(payload, attemptsLeft){
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(()=>{
+      console.log('Hasil berhasil dikirim ke Google Sheets.');
+      try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
+    })
+    .catch(err=>{
+      console.warn('Gagal mengirim hasil (percobaan tersisa: '+attemptsLeft+'):', err);
+      if(attemptsLeft>1){
+        setTimeout(()=>sendResultWithRetry_(payload, attemptsLeft-1), 4000);
+      } else {
+        // server mungkin sedang sangat sibuk — jangan menyerah, coba lagi tiap 25 detik di background
+        // selama halaman ini masih terbuka, sambil tetap simpan cadangan di localStorage.
+        console.warn('Masuk mode retry background, akan dicoba lagi tiap 25 detik...');
+        setTimeout(()=>sendResultWithRetry_(payload, 1), 25000);
+      }
+    });
+}
+
+// kalau siswa sempat menutup/refresh halaman "Selesai" sebelum hasil berhasil terkirim,
+// begitu index.html dibuka lagi di HP yang sama, coba kirim ulang hasil yang tertunda.
+(function resendPendingIfAny(){
+  try{
+    const pending=localStorage.getItem(PENDING_KEY);
+    if(pending){
+      console.log('Ditemukan hasil tertunda dari sesi sebelumnya, mencoba kirim ulang...');
+      sendResultWithRetry_(JSON.parse(pending), 3);
+    }
+  }catch(e){}
+})();
 
 const savedSession=loadSavedSession();
 if(savedSession){
