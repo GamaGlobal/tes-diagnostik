@@ -104,7 +104,7 @@ function fetchLive(){
     .then(res=>{
       if(!res.ok) return;
       liveData=res.live||[];
-      renderMonitor();
+      renderMonitor(document.getElementById('searchBoxLive')?document.getElementById('searchBoxLive').value:'');
     })
     .catch(()=>{});
 }
@@ -120,7 +120,8 @@ function fmtAgo(s){
   return Math.floor(s/60)+' menit lalu';
 }
 
-function renderMonitor(){
+function renderMonitor(filter){
+  filter=(filter||'').toLowerCase();
   const rows=liveData.map(r=>{
     const s=secondsAgo(r.TerakhirUpdate);
     const status = r.Status==='Selesai' ? 'done' : (s>STALE_AFTER_S ? 'stale' : 'live');
@@ -134,7 +135,11 @@ function renderMonitor(){
   const staleCount=rows.filter(x=>x.status==='stale').length;
   const doneCount=rows.filter(x=>x.status==='done').length;
 
-  const cards=rows.map(({r,s,status})=>{
+  const filteredRows=rows.filter(({r})=>
+    !filter || (r.Nama||'').toLowerCase().includes(filter) || (r.Sekolah||'').toLowerCase().includes(filter) || (r.Kelas||'').toLowerCase().includes(filter) || String(r.NIS||'').includes(filter)
+  );
+
+  const cards=filteredRows.map(({r,s,status})=>{
     const pct = r.TotalSoal>0 ? Math.round((r.SoalTerjawab/r.TotalSoal)*100) : 0;
     const statusLabel = status==='done' ? 'Selesai' : (status==='stale' ? 'Kemungkinan terhenti' : 'Aktif');
     return '<div class="p-card">'+
@@ -164,9 +169,12 @@ function renderMonitor(){
       '</div>'+
     '</div>'+
     '<div class="card">'+
-      '<div class="toolbar"><button class="btn small secondary" onclick="fetchLive()">↻ Muat Ulang Sekarang</button></div>'+
+      '<div class="toolbar">'+
+        '<input id="searchBoxLive" type="text" placeholder="Cari nama / sekolah / kelas / NIS…" value="'+filter+'" oninput="renderMonitor(this.value)">'+
+        '<button class="btn small secondary" onclick="fetchLive()">↻ Muat Ulang Sekarang</button>'+
+      '</div>'+
       '<p class="refresh-note">Auto-refresh tiap '+(AUTO_REFRESH_MS/1000)+' detik</p>'+
-      (cards || '<p class="muted center">Belum ada peserta yang sedang mengerjakan.</p>')+
+      (cards || '<p class="muted center">'+(filter ? 'Tidak ada peserta yang cocok dengan pencarian.' : 'Belum ada peserta yang sedang mengerjakan.')+'</p>')+
     '</div>'+
   '</div>';
 }
