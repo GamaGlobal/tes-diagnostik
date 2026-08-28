@@ -53,6 +53,17 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
 const RIASEC_LABELS={R:'Realistic',I:'Investigative',A:'Artistic',S:'Social',E:'Enterprising',C:'Conventional'};
 const GAYA_LABELS={V:'Visual',A:'Auditori',K:'Kinestetik'};
 const BAKAT_LABELS={MIPA:'MIPA',IPS:'IPS',BHS:'Bahasa',INF:'Informatika',VOK:'Vokasi'};
+/* Harus sama dengan ITEM_BANK_VERSION di index.html. Dipakai untuk menandai hasil yang
+   berasal dari sebelum audit psikometri (data lama tanpa field ini) agar tidak
+   dibandingkan langsung dengan hasil dari bank soal yang sudah direvisi. */
+const CURRENT_BANK_VERSION='2026-08-audit-v2';
+function bankVersionOf(r){ return r['Versi Bank Soal']||r.bankVersion||r['Bank Soal']||''; }
+function bankBadge(r){
+  const v=bankVersionOf(r);
+  if(!v) return '<span class="flag" title="Data tanpa penanda versi bank soal — kemungkinan diambil sebelum revisi item Agustus 2026">⚠ Pra-revisi</span>';
+  if(v!==CURRENT_BANK_VERSION) return '<span class="flag" title="Versi bank soal berbeda dari versi saat ini ('+CURRENT_BANK_VERSION+')">'+v+'</span>';
+  return v;
+}
 
 const app=document.getElementById('app');
 let allHasil=[];
@@ -112,7 +123,8 @@ function computeStats(){
   const withIQ=allHasil.filter(r=>!isDash(r['Estimasi IQ']));
   const avgIQ=withIQ.length ? Math.round(withIQ.reduce((a,r)=>a+Number(r['Estimasi IQ']),0)/withIQ.length) : '-';
   const flagged=allHasil.filter(r=>Number(r['Jumlah Pelanggaran'])>0).length;
-  return {total:allHasil.length, avgIQ, flagged, violations:allPelanggaran.length};
+  const preRevisi=allHasil.filter(r=>!bankVersionOf(r)).length;
+  return {total:allHasil.length, avgIQ, flagged, violations:allPelanggaran.length, preRevisi};
 }
 
 function renderDashboard(filter){
@@ -134,6 +146,7 @@ function renderDashboard(filter){
       '<td>'+(r['Gaya Belajar Dominan']||'-')+'</td>'+
       '<td>'+(r['Bakat Dominan']||'-')+'</td>'+
       '<td>'+(Number(r['Jumlah Pelanggaran'])>0 ? '<span class="flag">⚠ '+r['Jumlah Pelanggaran']+'</span>' : '0')+'</td>'+
+      '<td>'+bankBadge(r)+'</td>'+
     '</tr>';
   }).join('');
 
@@ -150,6 +163,7 @@ function renderDashboard(filter){
         '<div class="stat-box"><div class="num">'+stats.flagged+'</div><div class="lbl">Peserta Terflag</div></div>'+
         '<div class="stat-box"><div class="num">'+stats.violations+'</div><div class="lbl">Total Catatan Pelanggaran</div></div>'+
       '</div>'+
+      (stats.preRevisi>0 ? '<p class="muted" style="margin-top:10px;">⚠ <strong>'+stats.preRevisi+'</strong> hasil tidak memiliki penanda versi bank soal (kemungkinan diambil sebelum revisi item Agustus 2026) — jangan bandingkan langsung skornya dengan hasil dari bank soal versi saat ini ('+CURRENT_BANK_VERSION+').</p>' : '')+
     '</div>'+
     '<div class="card">'+
       '<div class="toolbar">'+
@@ -158,8 +172,8 @@ function renderDashboard(filter){
         '<button class="btn small secondary" onclick="exportCSV()">⬇ Export CSV</button>'+
       '</div>'+
       '<div class="table-wrap"><table>'+
-        '<thead><tr><th>Nama</th><th>Sekolah</th><th>Kelas</th><th>NIS</th><th>IQ</th><th>RIASEC</th><th>Gaya</th><th>Bakat</th><th>Pelanggaran</th></tr></thead>'+
-        '<tbody>'+(rows||'<tr><td colspan="9" class="muted" style="text-align:center;">Tidak ada data.</td></tr>')+'</tbody>'+
+        '<thead><tr><th>Nama</th><th>Sekolah</th><th>Kelas</th><th>NIS</th><th>IQ</th><th>RIASEC</th><th>Gaya</th><th>Bakat</th><th>Pelanggaran</th><th>Versi Soal</th></tr></thead>'+
+        '<tbody>'+(rows||'<tr><td colspan="10" class="muted" style="text-align:center;">Tidak ada data.</td></tr>')+'</tbody>'+
       '</table></div>'+
     '</div>'+
     '<p class="disclaimer muted">Catatan: Asesmen ini disusun oleh LBB Gama Global dengan mengacu pada prinsip-prinsip tes IST, RIASEC, dan gaya belajar VAK. Hasil yang tertera merupakan estimasi hasil olahan internal untuk tujuan pemetaan potensi dan minat, bukan skor psikometri resmi bersertifikat.</p>'+
@@ -182,6 +196,7 @@ function showDetail(idx){
     '<h2>'+(d.Nama||'-')+'</h2>'+
     '<p class="muted">'+(d.Sekolah||'-')+' • Kelas '+(d.Kelas||'-')+' • NIS '+(d.NIS||'-')+'</p>'+
     '<p class="muted">Waktu: '+(d.Timestamp||'-')+'</p>'+
+    '<p class="muted">Versi bank soal: '+bankBadge(d)+'</p>'+
     (!isDash(d['Estimasi IQ']) ? '<h3 style="font-size:0.95rem;margin-top:14px;">IQ: '+d['Estimasi IQ']+' ('+d['Klasifikasi']+')</h3>'+rowsHtml(domain,{}) : '')+
     (!isDash(d['Kode RIASEC (3 Besar)']) ? '<h3 style="font-size:0.95rem;margin-top:14px;">RIASEC: '+d['Kode RIASEC (3 Besar)']+'</h3>'+rowsHtml(riasec,RIASEC_LABELS) : '')+
     (!isDash(d['Gaya Belajar Dominan']) ? '<h3 style="font-size:0.95rem;margin-top:14px;">Gaya Belajar: '+(GAYA_LABELS[d['Gaya Belajar Dominan']]||d['Gaya Belajar Dominan'])+'</h3>'+rowsHtml(gaya,GAYA_LABELS) : '')+
@@ -193,10 +208,13 @@ function showDetail(idx){
 }
 
 function exportCSV(){
-  const headers=['Nama','Sekolah','Kelas','NIS','Estimasi IQ','Klasifikasi','Kode RIASEC (3 Besar)','Gaya Belajar Dominan','Bakat Dominan','Jumlah Pelanggaran','Timestamp'];
+  const headers=['Nama','Sekolah','Kelas','NIS','Estimasi IQ','Klasifikasi','Kode RIASEC (3 Besar)','Gaya Belajar Dominan','Bakat Dominan','Jumlah Pelanggaran','Versi Bank Soal','Timestamp'];
   const lines=[headers.join(',')];
   allHasil.forEach(r=>{
-    lines.push(headers.map(h=>'"'+String(r[h]||'').replace(/"/g,'""')+'"').join(','));
+    lines.push(headers.map(h=>{
+      const val = h==='Versi Bank Soal' ? (bankVersionOf(r)||'(pra-revisi)') : (r[h]||'');
+      return '"'+String(val).replace(/"/g,'""')+'"';
+    }).join(','));
   });
   const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
