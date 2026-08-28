@@ -86,6 +86,7 @@ function bar(pct){
 }
 
 function isDash(v){ return v===undefined || v===null || v==='' || v==='-'; }
+function bankVersionOf(r){ return r['Versi Bank Soal']||r.bankVersion||r['Bank Soal']||''; }
 
 function renderResult(d){
   let html='<div class="wrap">'+
@@ -145,7 +146,8 @@ function renderResult(d){
   }
 
   html+='<button class="btn block" style="background:transparent;color:var(--accent-dark);border:1px solid var(--accent);" onclick="renderForm()">Cek NIS Lain</button>';
-  html+='<p class="disclaimer">Catatan: Asesmen ini disusun oleh LBB Gama Global dengan mengacu pada prinsip-prinsip tes IST, RIASEC, dan gaya belajar VAK. Hasil yang tertera merupakan estimasi hasil olahan internal untuk tujuan pemetaan potensi dan minat, bukan skor psikometri resmi bersertifikat.</p>';
+  const bv=bankVersionOf(d);
+  html+='<p class="disclaimer">Catatan: Asesmen ini disusun oleh LBB Gama Global dengan mengacu pada prinsip-prinsip tes IST, RIASEC, dan gaya belajar VAK. Hasil yang tertera merupakan estimasi hasil olahan internal untuk tujuan pemetaan potensi dan minat, bukan skor psikometri resmi bersertifikat.'+(bv?' (Versi bank soal: '+bv+')':'')+'</p>';
   html+='</div>';
   app.innerHTML=html;
 }
