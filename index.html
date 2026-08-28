@@ -194,6 +194,10 @@
 /* ============ KONFIGURASI GOOGLE SHEETS ============ */
 /* Tempel URL Web App Apps Script Anda di sini setelah deploy (lihat Code.gs) */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8adeoOQpxhRjscdcLIE8qNNZOPsTcuZAAtwGzw8ytlUVjxRB/exec';
+/* Penanda revisi bank soal — dikirim bersama setiap hasil agar panitia bisa membedakan
+   hasil yang menggunakan bank soal sebelum vs sesudah audit psikometri.
+   Naikkan nilai ini setiap kali isi bank soal (SE/WA/AN/GE/FA/WU/dst.) diubah lagi. */
+const ITEM_BANK_VERSION = '2026-08-audit-v2';
 
 /* ============ KONFIGURASI ANTI-CURANG ============ */
 const SUPERVISOR_PIN = '246810'; /* ganti dengan PIN rahasia Anda sendiri */
@@ -232,7 +236,7 @@ const SE_RAW=[
 ["Semua siswa wajib ... peraturan sekolah.",["melanggar","menaati","mengabaikan","menolak"],1],
 ["Ayah membaca koran ... pagi hari.",["pada","dari","ke","tentang"],0],
 ["Karena rajin belajar, nilainya ... meningkat.",["selalu","jarang","tidak pernah","mustahil"],0],
-["Air akan membeku jika suhunya turun hingga ... derajat celcius.",["0","10","25","100"],0],
+["Karena listrik padam sejak semalam, es di dalam kulkas perlahan mulai ....",["membeku","mencair","memuai","menguap"],1],
 ["Karena terlalu lelah, ia langsung ... setelah sampai rumah.",["berlari","tidur","memasak","berbicara"],1],
 ["Perpustakaan adalah tempat untuk ... buku.",["menjual","membaca","membakar","membuang"],1],
 ["Petani itu menanam padi di ....",["laut","sawah","gedung","pasar"],1],
@@ -241,23 +245,23 @@ const SE_RAW=[
 ["Guru itu ... murid-muridnya dengan sabar.",["mengabaikan","membimbing","menghindari","memarahi terus"],1],
 ["Karena macet total, ia memutuskan naik ... agar lebih cepat sampai.",["mobil pribadi","motor","kereta","becak"],2],
 ["Dokter menyarankan pasien untuk ... sebelum operasi.",["makan banyak","berpuasa beberapa jam","berlari maraton","begadang"],1],
-["Karena baterainya habis, ponsel itu perlu ....",["dibuang","di-charge","dipecahkan","dibekukan"],1],
-["Ia memakai payung karena ....",["cuaca panas","hujan turun","listrik padam","ingin bergaya saja"],1],
+["Karena baterainya habis, ponsel itu perlu ....",["dibuang","diisi daya","dipecahkan","dibekukan"],1],
+["Karena langit gelap dan gerimis mulai turun, ia bergegas mengambil ... sebelum keluar rumah.",["payung","kipas angin","kacamata hitam","topi pantai"],0],
 ["Buku itu sangat tebal sehingga ia butuh waktu lama untuk ....",["membakarnya","menyelesaikannya","melipatnya","menjualnya"],1],
 ["Karena sering terlambat, Budi mendapat ... dari atasannya.",["pujian","teguran","hadiah","promosi cepat"],1],
-["Tanaman membutuhkan sinar matahari untuk proses ....",["respirasi","fotosintesis","pencernaan","pembekuan"],1],
+["Karena diletakkan di tempat gelap selama berminggu-minggu, tanaman itu perlahan menjadi ....",["subur","layu","berbuah lebat","semakin hijau"],1],
 ["Karena ingin sehat, ia mulai rutin ....",["merokok","berolahraga","begadang","makan sembarangan"],1]
 ];
 
 const WA_RAW=[
 [["Apel","Jeruk","Wortel","Mangga"],2],
-[["Gitar","Biola","Piano","Suling"],2],
+[["Gitar","Biola","Kecapi","Piano"],3],
 [["Berlari","Melompat","Duduk","Berenang"],2],
-[["Kucing","Anjing","Ayam","Meja"],3],
+[["Kucing","Anjing","Ayam","Batu"],3],
 [["Merah","Biru","Hijau","Besar"],3],
 [["Senin","Selasa","Januari","Rabu"],2],
 [["Segitiga","Lingkaran","Persegi","Merah"],3],
-[["Dokter","Perawat","Guru","Meja"],3],
+[["Dokter","Perawat","Guru","Sepatu"],3],
 [["Pensil","Pulpen","Spidol","Buku"],3],
 [["Ikan","Paus","Lumba-lumba","Ayam"],3],
 [["Jakarta","Bandung","Indonesia","Surabaya"],2],
@@ -267,7 +271,7 @@ const WA_RAW=[
 [["Emas","Perak","Besi","Kapas"],3],
 [["Kompor","Panci","Wajan","Kasur"],3],
 [["Gembira","Sedih","Marah","Berlari"],3],
-[["Panas","Dingin","Hangat","Meja"],3],
+[["Panas","Dingin","Hangat","Lemari"],3],
 [["Presiden","Gubernur","Camat","Pabrik"],3],
 [["Hujan","Salju","Kabut","Meja"],3]
 ];
@@ -288,7 +292,7 @@ const AN_RAW=[
 ["Pena","Menulis","Gunting",["Memotong","Menempel","Mengukur","Melipat"],0],
 ["Ayah","Anak","Guru",["Sekolah","Murid","Buku","Kelas"],1],
 ["Padi","Sawah","Ikan",["Kolam","Gunung","Gurun","Kota"],0],
-["Lebah","Madu","Sapi",["Daging","Susu","Telur","Kulit"],1],
+["Lebah","Madu","Sapi yang diperah",["Daging","Susu","Telur","Kulit"],1],
 ["Termometer","Suhu","Timbangan",["Panjang","Berat","Waktu","Volume"],1],
 ["Kompas","Arah","Jam",["Cuaca","Waktu","Berat","Jarak"],1],
 ["Pelukis","Kanvas","Penulis",["Kertas","Kayu","Batu","Kaca"],0],
@@ -296,21 +300,21 @@ const AN_RAW=[
 ];
 
 const GE_RAW=[
-["Piano","Gitar",["Alat musik","Alat tulis","Alat masak","Kendaraan"],0],
-["Kereta api","Pesawat",["Buah","Alat transportasi","Hewan","Pakaian"],1],
-["Jam","Termometer",["Alat pengukur","Alat masak","Pakaian","Mainan"],0],
-["Puisi","Lagu",["Karya seni berirama","Kendaraan","Makanan","Bangunan"],0],
+["Piano","Gitar",["Alat musik tradisional","Alat musik","Alat musik elektronik","Aksesori musik"],1],
+["Kereta api","Pesawat",["Alat transportasi darat","Alat transportasi laut","Alat transportasi","Kendaraan pribadi"],2],
+["Jam","Termometer",["Alat pengukur panjang","Alat pengukur berat","Alat pengukur","Alat komunikasi"],2],
+["Puisi","Lagu",["Karya sastra naratif","Karya seni berirama","Karya seni rupa","Karya seni pertunjukan"],1],
 ["Apel","Jeruk",["Sayuran","Buah-buahan","Umbi","Kacang-kacangan"],1],
 ["Dokter","Perawat",["Profesi bidang kesehatan","Petani","Pedagang","Seniman"],0],
 ["Sungai","Danau",["Sumber air","Gunung","Padang pasir","Hutan"],0],
 ["Kucing","Harimau",["Keluarga kucing (felidae)","Burung","Ikan","Serangga"],0],
 ["Matahari","Bintang",["Benda langit pemancar cahaya sendiri","Planet","Satelit","Komet"],0],
 ["Sepeda","Motor",["Kendaraan roda dua","Pesawat","Kapal","Kereta"],0],
-["Buku","Majalah",["Bahan bacaan","Alat masak","Pakaian","Perhiasan"],0],
-["Emas","Perak",["Logam mulia","Kain","Kayu","Plastik"],0],
-["Hujan","Salju",["Bentuk presipitasi","Jenis tanah","Jenis bebatuan","Jenis awan saja"],0],
+["Buku","Majalah",["Bahan bacaan","Alat tulis","Media cetak berupa poster","Dokumen resmi negara"],0],
+["Emas","Perak",["Logam mulia","Logam berat","Logam campuran (aloi)","Mineral tambang secara umum"],0],
+["Hujan","Salju",["Bentuk presipitasi","Jenis awan","Fenomena atmosfer non-presipitasi","Jenis iklim"],0],
 ["Padi","Jagung",["Tanaman pangan","Hewan ternak","Alat pertanian","Jenis pupuk"],0],
-["Novel","Cerpen",["Karya sastra prosa","Alat musik","Jenis olahraga","Jenis kendaraan"],0],
+["Novel","Cerpen",["Karya sastra prosa","Karya sastra puisi","Naskah drama","Karya sastra lisan (folklore)"],0],
 ["Gunung","Bukit",["Bentang alam menjulang tinggi","Sungai","Laut","Danau"],0]
 ];
 
@@ -339,26 +343,26 @@ const RA_RAW=[
 
 /* ============ QUESTION DATA: VERBAL — LEVEL SMA ============ */
 const SMA_SE_RAW=[
-["Karena inflasi terus meningkat, daya beli masyarakat cenderung ....",["meningkat","menurun","stabil","menghilang"],1],
-["Reaksi kimia eksotermik selalu ... energi ke lingkungan.",["menyerap","melepaskan","menyimpan","mengubah"],1],
-["Dalam sistem demokrasi, kedaulatan tertinggi berada di tangan ....",["presiden","rakyat","DPR","militer"],1],
-["Karena tekanan udara di ketinggian lebih rendah, titik didih air menjadi ....",["lebih tinggi","lebih rendah","tetap sama","tidak menentu"],1],
-["Hukum permintaan menyatakan bahwa jika harga naik, permintaan cenderung ....",["naik","turun","tetap","berlipat ganda"],1],
-["Fotosintesis mengubah energi cahaya menjadi energi ....",["panas","kimia","listrik","nuklir"],1],
-["Karena tergolong bilangan prima, angka tersebut hanya habis dibagi oleh ... dan dirinya sendiri.",["0","1","2","semua bilangan"],1],
-["Dalam teks argumentasi, penulis berusaha ... pembaca agar setuju dengan pendapatnya.",["menghibur","meyakinkan","menakuti","membingungkan"],1],
-["Ketika suatu negara mengalami defisit anggaran, pengeluaran pemerintah melebihi ....",["utang luar negeri","pendapatan","investasi asing","cadangan devisa"],1],
-["Menurut hukum kekekalan energi, energi tidak dapat diciptakan atau ... hanya dapat berubah bentuk.",["digandakan","dimusnahkan","disimpan","dipindahkan"],1],
-["Globalisasi mendorong ... antarnegara dalam bidang ekonomi dan budaya.",["isolasi","keterhubungan","perpecahan","stagnasi"],1],
-["Sel yang mengalami mitosis akan menghasilkan dua sel anak yang secara genetik ....",["berbeda total","identik","lebih kecil separuh","mati"],1],
-["Dalam limit matematika, jika x mendekati tak hingga dan fungsi mendekati nol, nilai fungsi dikatakan ....",["divergen","konvergen ke nol","tidak terdefinisi","konstan"],1],
-["Karena tergolong teks eksposisi, tulisan tersebut bertujuan untuk ... suatu topik secara objektif.",["menghibur","menjelaskan","membujuk","menceritakan"],1],
-["Revolusi industri menandai peralihan dari tenaga manusia ke tenaga ....",["hewan","mesin","angin saja","manual"],1],
-["Dalam ekosistem, organisme yang berperan menguraikan sisa makhluk hidup disebut ....",["produsen","dekomposer","konsumen puncak","herbivora"],1],
-["Semakin besar resistansi suatu konduktor, semakin ... arus listrik yang mengalir pada tegangan tetap.",["besar","kecil","tidak berubah","tak terhingga"],1],
-["Otonomi daerah memberi wewenang kepada pemerintah daerah untuk ... urusan rumah tangganya sendiri.",["menyerahkan","mengatur","mengabaikan","memusatkan"],1],
-["Dalam teori evolusi, individu dengan sifat yang lebih adaptif memiliki peluang ... yang lebih besar.",["kepunahan","kelangsungan hidup","mutasi acak","kemunduran"],1],
-["Karena bersifat asam, suatu larutan memiliki pH ... 7.",["sama dengan","di bawah","di atas","tidak berhubungan dengan"],1]
+["Karena proyek tersebut menuai kritik keras dari publik, perusahaan akhirnya memutuskan untuk ... rencana tersebut.",["melanjutkan","membatalkan","mempercepat","merahasiakan"],1],
+["Meskipun sudah diperingatkan berkali-kali, ia tetap ... pada kebiasaan buruknya.",["bertahan","berubah","menyesal","memperbaiki"],0],
+["Karena argumennya didukung banyak bukti kuat, pendapatnya menjadi semakin sulit untuk ... oleh lawan bicara.",["dipahami","dibantah","disetujui","diabaikan"],1],
+["Karena jadwal penerbangannya ditunda hingga larut malam, para penumpang mulai terlihat ... menunggu di ruang tunggu.",["gembira","gelisah","bersemangat","puas"],1],
+["Walaupun sudah berulang kali dijelaskan, ia tetap tidak ... maksud dari instruksi tersebut.",["memahami","menjalankan","mengabaikan","menyetujui"],0],
+["Karena selalu bersikap jujur dalam setiap situasi, ia dikenal sebagai orang yang sangat ... oleh rekan-rekannya.",["dipercaya","dicurigai","dihindari","diabaikan"],0],
+["Karena anggaran yang tersedia jauh lebih kecil daripada kebutuhan proyek, panitia terpaksa ... beberapa rencana kegiatan.",["menambah","memangkas","memperluas","mempercepat"],1],
+["Meskipun telah diberi banyak kesempatan, kualitas pekerjaannya tidak kunjung ... sejak awal bergabung.",["menurun","membaik","berubah drastis","memburuk"],1],
+["Karena harga bahan baku terus melonjak, para pengusaha kecil semakin ... untuk mempertahankan usahanya.",["bersemangat","kesulitan","diuntungkan","dimanjakan"],1],
+["Karena kedua bersaudara itu dibesarkan dalam lingkungan yang sama, sifat mereka pun terlihat cukup ... satu sama lain.",["bertentangan","mirip","asing","berlawanan"],1],
+["Semakin sering ia berlatih berbicara di depan umum, rasa gugupnya pun semakin ... setiap kali tampil.",["bertambah","berkurang","menetap","memuncak"],1],
+["Karena laporan itu ditulis tanpa data pendukung yang jelas, banyak pihak meragukan ... isinya.",["kejelasan","keakuratan","kepanjangan","keindahan"],1],
+["Setelah sistem baru diterapkan, proses produksi yang tadinya lambat kini menjadi jauh lebih ....",["efisien","rumit","mahal","berisiko"],0],
+["Karena tuduhan terhadapnya tidak didukung bukti apa pun, ia akhirnya dinyatakan ... oleh pengadilan.",["bersalah","tidak bersalah","terlambat","istimewa"],1],
+["Meskipun harga barang tersebut naik drastis, permintaan pasar terhadapnya justru tetap ... karena dianggap kebutuhan pokok.",["menurun tajam","tinggi","menghilang","tidak menentu"],1],
+["Karena selalu datang tepat waktu dan menyelesaikan tugas dengan baik, ia mendapat ... dari atasannya.",["teguran","apresiasi","peringatan","sanksi"],1],
+["Setelah melalui proses negosiasi yang panjang, kedua belah pihak akhirnya mencapai ... yang menguntungkan keduanya.",["perselisihan","kesepakatan","kebuntuan","konflik"],1],
+["Karena minim pengalaman di bidang tersebut, ia memilih untuk ... terlebih dahulu sebelum mengambil keputusan besar.",["nekat bertindak","berkonsultasi dengan ahli","mengabaikan saran","bertindak sendiri"],1],
+["Walaupun cuaca memburuk sepanjang perjalanan, tim pendaki itu tetap ... menuju puncak dengan penuh kehati-hatian.",["menyerah","melanjutkan","berbalik arah","berhenti total"],1],
+["Karena terus-menerus menunda pekerjaan, tugas yang menumpuk itu membuatnya semakin ... menjelang tenggat waktu.",["tenang","tertekan","santai","percaya diri"],1]
 ];
 
 const SMA_WA_RAW=[
@@ -367,7 +371,7 @@ const SMA_WA_RAW=[
 [["Mitosis","Meiosis","Fotosintesis","Fertilisasi"],2],
 [["Sonata","Simfoni","Konserto","Prosa"],3],
 [["Asteroid","Komet","Meteor","Galaksi"],3],
-[["Inflasi","Deflasi","Resesi","Fotosintesis"],3],
+[["Inflasi","Deflasi","Resesi","Metamorfosis"],3],
 [["Segitiga siku-siku","Lingkaran","Persegi panjang","Kubus"],3],
 [["Adjektiva","Verba","Nomina","Paragraf"],3],
 [["Litosfer","Atmosfer","Hidrosfer","Fauna"],3],
@@ -376,12 +380,12 @@ const SMA_WA_RAW=[
 [["Pancasila","UUD 1945","Bhinneka Tunggal Ika","Presiden"],3],
 [["Karbohidrat","Protein","Lemak","Enzim"],3],
 [["Barisan aritmetika","Barisan geometri","Deret Fibonacci","Persamaan kuadrat"],3],
-[["Ekspor","Impor","Neraca perdagangan","Fotosintesis"],3],
+[["Ekspor","Impor","Neraca perdagangan","Mitosis"],3],
 [["Vertebrata","Invertebrata","Mamalia","Metamorfosis"],3],
 [["Asam","Basa","Garam","Molekul"],3],
 [["Puisi","Cerpen","Novel","Deklamasi"],3],
 [["Longitudinal","Transversal","Elektromagnetik","Amplitudo"],3],
-[["Republik","Federasi","Kesatuan","Konstitusi"],3]
+[["Republik","Federasi","Kesatuan","Presiden"],3]
 ];
 
 const SMA_AN_RAW=[
@@ -408,22 +412,22 @@ const SMA_AN_RAW=[
 ];
 
 const SMA_GE_RAW=[
-["Mitosis","Meiosis",["Proses pembelahan sel","Proses pencernaan","Jenis penyakit","Jenis tumbuhan"],0],
-["Inflasi","Deflasi",["Fenomena perubahan tingkat harga umum","Jenis pajak","Kebijakan luar negeri","Bentuk investasi"],0],
-["Demokrasi","Monarki",["Sistem pemerintahan","Jenis mata uang","Cabang ilmu","Alat musik"],0],
-["Asam","Basa",["Golongan senyawa kimia berdasarkan sifat pH","Jenis logam","Bentuk energi","Jenis gelombang"],0],
-["Novel","Cerpen",["Karya sastra berbentuk prosa","Karya seni rupa","Alat musik tradisional","Cabang olahraga"],0],
-["Legislatif","Yudikatif",["Cabang kekuasaan dalam pemerintahan","Partai politik","Lembaga swadaya masyarakat","Organisasi internasional"],0],
-["Longitudinal","Transversal",["Jenis gelombang","Jenis tanah","Jenis awan","Jenis batuan"],0],
-["Ekspor","Impor",["Kegiatan perdagangan internasional","Kegiatan produksi dalam negeri","Kebijakan moneter","Jenis pajak"],0],
-["Protagonis","Antagonis",["Tokoh dalam cerita","Jenis kalimat","Unsur puisi","Gaya bahasa"],0],
-["Karbohidrat","Protein",["Zat makronutrien bagi tubuh","Jenis vitamin","Jenis mineral","Jenis hormon"],0],
-["Barisan aritmetika","Barisan geometri",["Pola bilangan matematis","Jenis grafik","Rumus fisika","Bentuk geometri ruang"],0],
-["Litosfer","Hidrosfer",["Lapisan bumi","Lapisan atmosfer atas","Jenis awan","Jenis mineral"],0],
-["Elektron","Proton",["Partikel penyusun atom","Jenis unsur kimia","Jenis molekul","Jenis senyawa"],0],
-["Puisi","Prosa",["Bentuk karya sastra","Bentuk seni rupa","Cabang ilmu sosial","Jenis tarian"],0],
-["Revolusi","Evolusi",["Proses perubahan","Sistem pemerintahan","Jenis energi","Alat ukur"],0],
-["Katalis","Inhibitor",["Zat yang memengaruhi laju reaksi kimia","Jenis logam mulia","Jenis larutan asam","Bentuk energi kinetik"],0]
+["Mitosis","Meiosis",["Proses pembelahan sel","Proses metabolisme sel","Proses transportasi zat dalam sel","Jenis jaringan sel"],0],
+["Inflasi","Deflasi",["Jenis kebijakan fiskal","Fenomena perubahan tingkat harga umum","Jenis kebijakan moneter","Bentuk investasi jangka panjang"],1],
+["Demokrasi","Monarki",["Bentuk negara","Sistem pemerintahan","Ideologi politik","Sistem ekonomi"],1],
+["Asam","Basa",["Golongan senyawa kimia berdasarkan sifat pH","Golongan senyawa kimia berdasarkan wujud zat","Golongan senyawa kimia berdasarkan ikatan","Jenis reaksi kimia"],0],
+["Novel","Cerpen",["Karya sastra berbentuk prosa","Karya sastra berbentuk puisi","Naskah drama","Karya sastra lisan"],0],
+["Legislatif","Yudikatif",["Cabang kekuasaan dalam pemerintahan","Lembaga negara nonstruktural","Partai politik","Organisasi kemasyarakatan"],0],
+["Longitudinal","Transversal",["Jenis gelombang berdasarkan arah rambat","Jenis gelombang berdasarkan medium rambat","Jenis gelombang elektromagnetik saja","Sifat gelombang bunyi"],0],
+["Ekspor","Impor",["Kegiatan perdagangan internasional","Kegiatan produksi dalam negeri","Kebijakan fiskal","Jenis pajak perdagangan"],0],
+["Protagonis","Antagonis",["Tokoh utama dalam cerita","Unsur intrinsik cerita berupa alur","Gaya bahasa","Unsur puisi"],0],
+["Karbohidrat","Protein",["Zat makronutrien bagi tubuh","Jenis vitamin","Jenis mineral esensial","Jenis hormon tubuh"],0],
+["Barisan aritmetika","Barisan geometri",["Pola bilangan matematis","Bentuk fungsi kuadrat","Jenis persamaan diferensial","Bentuk geometri ruang"],0],
+["Litosfer","Hidrosfer",["Lapisan bumi","Lapisan atmosfer","Jenis batuan beku","Jenis mineral tambang"],0],
+["Elektron","Proton",["Partikel penyusun atom","Jenis unsur kimia","Jenis ikatan kimia","Jenis molekul"],0],
+["Puisi","Prosa",["Bentuk karya sastra","Jenis majas","Unsur intrinsik cerita","Aliran sastra"],0],
+["Revolusi","Evolusi",["Proses perubahan","Sistem pemerintahan","Cabang ilmu biologi","Jenis fenomena sosial"],0],
+["Katalis","Inhibitor",["Zat yang memengaruhi laju reaksi kimia","Jenis larutan asam","Jenis larutan basa","Golongan logam"],0]
 ];
 
 const SMA_RA_RAW=[
@@ -547,11 +551,11 @@ function shapeSVG(sides,color,size,rotDeg){
     '<polygon points="'+polygonPoints(sides,cx,cy,r,rotDeg)+'" fill="'+color+'" stroke="#20242B" stroke-width="2"/></svg>';
 }
 function generateFA(i,level){
-  const startSides=3+(i%4);
+  const startSides=3+(i%3);
   const colorIdx=i%FA_COLORS.length;
   const color=FA_COLORS[colorIdx];
   if(level==='sma'){
-    const rotStep=15+(i%3)*10;
+    const rotStep=13+(i%3)*9;
     const seq=[0,1,2].map(k=>({sides:startSides+k,color,rot:k*rotStep}));
     const correct={sides:startSides+3,color,rot:3*rotStep};
     const wrongRot={sides:startSides+3,color,rot:2*rotStep};
@@ -575,6 +579,7 @@ function generateFA(i,level){
 const CUBE_SYMBOLS=['★','●','▲','■','◆','✦','☀','♣','♥','☂','✈','☘'];
 const CUBE_POS=['Top','Left','Front','Right','Back','Bottom'];
 const CUBE_OPPOSITE={Top:'Bottom',Bottom:'Top',Left:'Right',Right:'Left',Front:'Back',Back:'Front'};
+const CUBE_BAND=['Left','Front','Right','Back'];
 function generateWU(){
   const pool=shuffle([...CUBE_SYMBOLS]).slice(0,6);
   const net={};
@@ -586,7 +591,16 @@ function generateWU(){
   const distractors=shuffle(others).slice(0,3);
   const opts=shuffle([correct,...distractors]);
   const answer=opts.indexOf(correct);
-  return {kind:'cube',net,target,options:opts,answer};
+  const rot=Math.floor(Math.random()*4);
+  let band=CUBE_BAND.slice(rot).concat(CUBE_BAND.slice(0,rot));
+  if(Math.random()<0.5) band=band.slice().reverse();
+  const swapVertical=Math.random()<0.5;
+  const layout={
+    top: swapVertical?'Bottom':'Top',
+    bottom: swapVertical?'Top':'Bottom',
+    col1: band[0], col2: band[1], col3: band[2], col4: band[3]
+  };
+  return {kind:'cube',net,target,options:opts,answer,layout};
 }
 
 /* ============ MEMORY (ME) ============ */
@@ -1124,7 +1138,8 @@ function sendViolationNote(){
     status:'PELANGGARAN',
     catatan:'Melakukan pelanggaran sebanyak '+cheatCount+' kali (batas maksimal '+MAX_VIOLATIONS+'x)',
     cheatCount,
-    cheatLog:cheatLog.join(' | ')
+    cheatLog:cheatLog.join(' | '),
+    bankVersion:ITEM_BANK_VERSION
   };
   fetch(GAS_URL,{method:'POST',body:JSON.stringify(note)}).catch(err=>{
     console.error('Gagal mengirim catatan pelanggaran ke Google Sheets:', err);
@@ -1479,15 +1494,16 @@ function renderQOptions(sec,q,qIdx){
   }
   if(q.kind==='cube'){
     const net=q.net;
+    const layout=q.layout;
     const pos=(p,col,row)=>'<div style="grid-column:'+col+';grid-row:'+row+';" class="cube-cell'+(p===q.target?' target':'')+'">'+net[p]+'</div>';
     return '<p class="muted">Sisi bertanda kotak biru = <strong>'+q.target+'</strong>. Simbol apa yang berhadapan dengannya setelah dilipat?</p>'+
       '<div class="cube-net">'+
-      pos('Top',2,1)+
-      pos('Left',1,2)+
-      pos('Front',2,2)+
-      pos('Right',3,2)+
-      pos('Back',4,2)+
-      pos('Bottom',2,3)+
+      pos(layout.top,2,1)+
+      pos(layout.col1,1,2)+
+      pos(layout.col2,2,2)+
+      pos(layout.col3,3,2)+
+      pos(layout.col4,4,2)+
+      pos(layout.bottom,2,3)+
       '</div>'+
       '<div class="cube-opts">'+
       q.options.map((o,oi)=>'<div class="opt'+selCls(sec,qIdx,oi)+'" onclick="selectAnswer('+qIdx+','+oi+')" id="opt-'+qIdx+'-'+oi+'">'+o+'</div>').join('')+
@@ -1631,7 +1647,7 @@ function computeResults(){
   const gayaSection=sections.find(s=>s.id==='GAYA');
   const bakatSection=sections.find(s=>s.id==='BAKAT');
 
-  lastResults={nama:studentName,sekolah:studentSchool,kelas:studentClass,nis:studentNIS,cheatCount,cheatLog:cheatLog.join(' | '),timestamp:new Date().toISOString()};
+  lastResults={nama:studentName,sekolah:studentSchool,kelas:studentClass,nis:studentNIS,cheatCount,cheatLog:cheatLog.join(' | '),timestamp:new Date().toISOString(),bankVersion:ITEM_BANK_VERSION};
 
   if(GAS_URL && GAS_URL.indexOf('PASTE_URL')!==0){
     fetch(GAS_URL,{method:'POST',body:JSON.stringify({
