@@ -142,6 +142,7 @@ function renderMonitor(filter){
   const cards=filteredRows.map(({r,s,status})=>{
     const pct = r.TotalSoal>0 ? Math.round((r.SoalTerjawab/r.TotalSoal)*100) : 0;
     const statusLabel = status==='done' ? 'Selesai' : (status==='stale' ? 'Kemungkinan terhenti' : 'Aktif');
+    const nisEsc=String(r.NIS||'').replace(/'/g,"\\'");
     return '<div class="p-card">'+
       '<div class="p-top">'+
         '<span class="p-name"><span class="dot '+status+'"></span>'+(r.Nama||'-')+'</span>'+
@@ -152,6 +153,11 @@ function renderMonitor(filter){
         (Number(r.Pelanggaran)>0 ? ' • <span class="flag">⚠ '+r.Pelanggaran+' pelanggaran</span>' : '')+
       '</div>'+
       (r.TotalSoal>0 ? '<div class="progress-line"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="p-sub">'+(r.SoalTerjawab||0)+' / '+(r.TotalSoal||0)+' soal terjawab</div>' : '')+
+      (status!=='done' ?
+        '<div style="display:flex;gap:8px;margin-top:8px;">'+
+          '<button class="btn small secondary" onclick="forceSubmitLive(\''+nisEsc+'\',\''+(r.Nama||'').replace(/'/g,"\\'")+'\')">▶ Submit Paksa</button>'+
+          '<button class="btn small secondary" style="border-color:var(--warn);color:var(--warn);" onclick="hapusLive(\''+nisEsc+'\',\''+(r.Nama||'').replace(/'/g,"\\'")+'\')">🗑 Hapus</button>'+
+        '</div>' : '')+
     '</div>';
   }).join('');
 
@@ -177,6 +183,28 @@ function renderMonitor(filter){
       (cards || '<p class="muted center">'+(filter ? 'Tidak ada peserta yang cocok dengan pencarian.' : 'Belum ada peserta yang sedang mengerjakan.')+'</p>')+
     '</div>'+
   '</div>';
+}
+
+function forceSubmitLive(nis,nama){
+  if(!confirm('Submit paksa hasil untuk "'+nama+'"? Bagian yang belum sempat dijawab akan dianggap tidak terjawab/nol, dan peserta akan dianggap SELESAI. Tindakan ini tidak bisa dibatalkan.')) return;
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'forceSubmit',pin:dashPin,nis:nis})})
+    .then(r=>r.json())
+    .then(res=>{
+      if(!res || !res.ok){ alert('Gagal submit paksa: '+((res&&res.error)||'server tidak merespons sesuai harapan. Pastikan Code.gs sudah mendukung action "forceSubmit".')); return; }
+      fetchLive();
+    })
+    .catch(()=>{ alert('Gagal terhubung ke server saat submit paksa.'); });
+}
+
+function hapusLive(nis,nama){
+  if(!confirm('Hapus entri pemantauan untuk "'+nama+'" dari Monitor Live? Ini hanya menghapus catatan progres real-time, bukan hasil akhir jika sudah tersimpan di rekap.')) return;
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'deleteLive',pin:dashPin,nis:nis})})
+    .then(r=>r.json())
+    .then(res=>{
+      if(!res || !res.ok){ alert('Gagal menghapus: '+((res&&res.error)||'server tidak merespons sesuai harapan. Pastikan Code.gs sudah mendukung action "deleteLive".')); return; }
+      fetchLive();
+    })
+    .catch(()=>{ alert('Gagal terhubung ke server saat menghapus.'); });
 }
 
 renderLogin();
