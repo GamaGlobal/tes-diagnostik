@@ -910,6 +910,12 @@ let selectedLevel='sma';
 let currentLevel='sma';
 let selectedModules={IST:true,RIASEC:true,GAYA:true,BAKAT:true};
 
+/* Level dikunci lewat parameter URL (?level=smp / ?level=sma), dibagikan panitia
+   per kelompok kelas, agar siswa tidak perlu (dan tidak bisa) salah pilih jenjang. */
+const _urlLevelParam=new URLSearchParams(window.location.search).get('level');
+const lockedLevel=(_urlLevelParam==='smp'||_urlLevelParam==='sma') ? _urlLevelParam : null;
+if(lockedLevel) selectedLevel=lockedLevel;
+
 let cheatCount=0;
 let cheatLog=[];
 let antiCheatArmed=false;
@@ -1280,10 +1286,14 @@ function renderWelcome(){
     (selectedModules.IST ?
     '<div class="card">'+
       '<h3 style="font-size:1rem;">Level Soal IST</h3>'+
-      '<div style="display:flex;gap:10px;margin-top:8px;">'+
-        '<button class="btn'+(selectedLevel==='smp'?'':' secondary')+'" style="flex:1;" onclick="selectLevel(\'smp\')">SMP</button>'+
-        '<button class="btn'+(selectedLevel==='sma'?'':' secondary')+'" style="flex:1;" onclick="selectLevel(\'sma\')">SMA</button>'+
-      '</div>'+
+      (lockedLevel ?
+        '<p class="muted" style="margin-top:8px;">Level soal untuk tautan ini sudah ditetapkan panitia: <strong>'+(lockedLevel==='smp'?'SMP':'SMA')+'</strong>. Jika ini tidak sesuai jenjang Anda, hubungi pengawas — jangan lanjutkan tes.</p>'
+        :
+        '<div style="display:flex;gap:10px;margin-top:8px;">'+
+          '<button class="btn'+(selectedLevel==='smp'?'':' secondary')+'" style="flex:1;" onclick="selectLevel(\'smp\')">SMP</button>'+
+          '<button class="btn'+(selectedLevel==='sma'?'':' secondary')+'" style="flex:1;" onclick="selectLevel(\'sma\')">SMA</button>'+
+        '</div>'
+      )+
     '</div>' : '')+
     '<div class="card">'+
       '<p class="muted"><strong>Total:</strong> '+info.q+' soal/pernyataan dari '+info.count+' subtes/modul, estimasi '+info.m+' menit.</p>'+
@@ -1312,8 +1322,20 @@ function toggleModule(key){
 }
 
 function selectLevel(lvl){
+  if(lockedLevel) return;
   selectedLevel=lvl;
   renderWelcome();
+}
+
+/* Tebak jenjang dari isian kelas (angka 7-9 => SMP, 10-12 => SMA).
+   Dipakai hanya untuk cek silang peringatan, bukan untuk mengubah pilihan siswa. */
+function inferLevelFromClass(kelasStr){
+  const m=kelasStr.match(/\d{1,2}/);
+  if(!m) return null;
+  const n=parseInt(m[0],10);
+  if(n>=7 && n<=9) return 'smp';
+  if(n>=10 && n<=12) return 'sma';
+  return null;
 }
 
 function beginTest(){
@@ -1322,10 +1344,31 @@ function beginTest(){
   if(!nameVal){ alert('Mohon isi nama terlebih dahulu.'); return; }
   const nisVal=document.getElementById('inpNIS').value.trim();
   if(!/^\d{5}$/.test(nisVal)){ alert('Mohon isi 5 digit terakhir NIS (angka saja).'); return; }
+  const classVal=document.getElementById('inpClass').value.trim();
+
+  // Cek silang: hanya relevan kalau level TIDAK dikunci lewat URL dan modul IST dipilih.
+  if(!lockedLevel && selectedModules.IST){
+    const inferred=inferLevelFromClass(classVal);
+    if(inferred && inferred!==selectedLevel){
+      const inferredLbl=inferred==='smp'?'SMP':'SMA';
+      const chosenLbl=selectedLevel==='smp'?'SMP':'SMA';
+      showConfirmDialog(
+        'Kelas yang Anda isi ("'+classVal+'") biasanya jenjang <strong>'+inferredLbl+'</strong>, tapi level soal yang dipilih <strong>'+chosenLbl+'</strong>. Lanjutkan dengan level '+chosenLbl+'?',
+        function(){ doBeginTest(nameVal,classVal,nisVal); },
+        'Ya, Lanjutkan '+chosenLbl,
+        'Batal, Ubah Level'
+      );
+      return;
+    }
+  }
+  doBeginTest(nameVal,classVal,nisVal);
+}
+
+function doBeginTest(nameVal,classVal,nisVal){
   clearSession();
   studentName=nameVal;
   studentSchool=document.getElementById('inpSchool').value.trim();
-  studentClass=document.getElementById('inpClass').value.trim();
+  studentClass=classVal;
   studentNIS=nisVal;
   currentLevel=selectedLevel;
   sections=buildSections(currentLevel,selectedModules);
@@ -1340,6 +1383,22 @@ function beginTest(){
   render();
   saveSession();
   startHeartbeat();
+}
+
+function showConfirmDialog(msgHtml,onYes,yesLabel,noLabel){
+  const overlay=document.createElement('div');
+  overlay.className='confirm-overlay';
+  overlay.innerHTML=
+    '<div class="confirm-card">'+
+      '<p style="margin:0;">'+msgHtml+'</p>'+
+      '<div class="btn-row">'+
+        '<button class="btn secondary" id="genConfirmNo">'+(noLabel||'Batal')+'</button>'+
+        '<button class="btn" id="genConfirmYes">'+(yesLabel||'Ya')+'</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('genConfirmNo').onclick=()=>{ overlay.remove(); };
+  document.getElementById('genConfirmYes').onclick=()=>{ overlay.remove(); onYes(); };
 }
 
 let heartbeatHandle=null;
