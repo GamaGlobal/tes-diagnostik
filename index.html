@@ -1605,12 +1605,14 @@ function finishSection(auto){
       if(isCorrect) byCategory[q.category].correct+=1;
     });
     sectionScores[s.id]={byCategory,correct};
-    showTransition(auto ? 'Waktu Habis' : 'Modul Selesai', s.title+' — '+correct+' dari '+s.questions.length+' benar');
+    const answeredCountApt=arr.filter(a=>a!==null && a!==undefined).length;
+    showTransition(auto ? 'Waktu Habis' : 'Modul Selesai', s.title+' — '+answeredCountApt+' dari '+s.questions.length+' soal dikerjakan');
   } else {
     let correct=0;
     s.questions.forEach((q,idx)=>{ if(arr[idx]===q.answer) correct++; });
     sectionScores[s.id]=correct;
-    showTransition(auto ? 'Waktu Habis' : 'Subtes Selesai', s.title+' — '+correct+' dari '+s.questions.length+' benar');
+    const answeredCount=arr.filter(a=>a!==null && a!==undefined).length;
+    showTransition(auto ? 'Waktu Habis' : 'Subtes Selesai', s.title+' — '+answeredCount+' dari '+s.questions.length+' soal dikerjakan');
   }
 }
 
