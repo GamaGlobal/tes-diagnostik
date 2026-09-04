@@ -198,6 +198,13 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
    hasil yang menggunakan bank soal sebelum vs sesudah audit psikometri.
    Naikkan nilai ini setiap kali isi bank soal (SE/WA/AN/GE/FA/WU/dst.) diubah lagi. */
 const ITEM_BANK_VERSION = '2026-08-audit-v2';
+/* Supaya ratusan peserta yang selesai di waktu yang nyaris sama tidak semua kirim hasil
+   ke server di detik yang sama persis, kirim hasil akhir ditunda acak 0 - SUBMIT_JITTER_MAX_MS
+   milidetik. Halaman "Tes Selesai" tetap tampil langsung ke siswa, cuma pengiriman ke server-nya
+   yang ditunda sedikit di belakang layar. Hasilnya sudah dicadangkan ke localStorage duluan,
+   jadi aman walau siswa keburu menutup halaman sebelum jitter-nya habis (akan dikirim ulang
+   otomatis begitu index.html dibuka lagi di HP yang sama). */
+const SUBMIT_JITTER_MAX_MS = 15000;
 
 /* ============ KONFIGURASI ANTI-CURANG ============ */
 const SUPERVISOR_PIN = '246810'; /* ganti dengan PIN rahasia Anda sendiri */
@@ -1778,7 +1785,13 @@ let finalSaved=false;
 function renderFinal(){
   computeResults();
   lastResults.status='Selesai Normal';
-  if(!finalSaved){ finalSaved=true; saveToSheet(); }
+  if(!finalSaved){
+    finalSaved=true;
+    // cadangkan dulu segera (tidak ikut ditunda), baru pengiriman ke server-nya yang di-jitter
+    try{ localStorage.setItem(PENDING_KEY, JSON.stringify(lastResults)); }catch(e){}
+    const jitterMs=Math.floor(Math.random()*SUBMIT_JITTER_MAX_MS);
+    setTimeout(saveToSheet, jitterMs);
+  }
   clearSession();
 
   app.innerHTML=
