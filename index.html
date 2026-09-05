@@ -980,6 +980,7 @@ function resumeSession(data){
   if(data.phase==='locked'){
     phase='locked';
     render();
+    startHeartbeat(); // tetap lanjutkan heartbeat walau lagi terkunci, supaya panitia tetap lihat statusnya
   } else if(data.phase==='memorize' || data.phase==='test'){
     phase=data.phase;
     armAntiCheat();
@@ -992,6 +993,7 @@ function resumeSession(data){
       render();
       if(data.phase==='memorize'){ startMemorizeTimer(); } else { startTestTimer(); }
     }
+    startHeartbeat(); // BUG SEBELUMNYA: resumeSession() lupa restart heartbeat setelah reload/resume
   } else {
     /* intro */
     phase='intro';
