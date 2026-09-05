@@ -52,7 +52,11 @@
 /* ============ KONFIGURASI ============ */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8adeoOQpxhRjscdcLIE8qNNZOPsTcuZAAtwGzw8ytlUVjxRB/exec';
 const AUTO_REFRESH_MS = 8000; // refresh tiap 8 detik
-const STALE_AFTER_S = 45; // kalau tidak update >45 detik, dianggap kemungkinan terhenti/keluar
+const STALE_AFTER_S = 300; // kalau tidak update >5 menit, dianggap kemungkinan terhenti/keluar.
+// PENTING: index.html sekarang kirim heartbeat tiap 120 detik (HEARTBEAT_INTERVAL_MS di sana).
+// Angka ini HARUS lebih besar dari itu (idealnya >=2x, plus buffer jaringan) -- kalau nanti
+// interval heartbeat di index.html diubah lagi, ubah juga angka ini supaya tidak salah tandai
+// peserta yang sebenarnya masih aktif sebagai "terhenti".
 
 const app=document.getElementById('app');
 let liveData=[];
@@ -81,7 +85,7 @@ function loginDash(){
   const pin=document.getElementById('inpPin').value.trim();
   if(!pin){ renderLogin('Mohon isi PIN.'); return; }
   renderLoading();
-  fetch(GAS_URL+'?action=live&pin='+encodeURIComponent(pin))
+  fetch(GAS_URL+'?action=live&pin='+encodeURIComponent(pin)+'&_ts='+Date.now(), {cache:'no-store'})
     .then(r=>r.json())
     .then(res=>{
       if(!res.ok){ renderLogin(res.error||'PIN salah.'); return; }
@@ -99,7 +103,8 @@ function startAutoRefresh(){
 }
 
 function fetchLive(){
-  fetch(GAS_URL+'?action=live&pin='+encodeURIComponent(dashPin))
+  // &_ts=... + cache:'no-store' supaya browser/proxy tidak nyuguhin hasil lama (data "macet")
+  fetch(GAS_URL+'?action=live&pin='+encodeURIComponent(dashPin)+'&_ts='+Date.now(), {cache:'no-store'})
     .then(r=>r.json())
     .then(res=>{
       if(!res.ok) return;
