@@ -94,7 +94,7 @@ function loginDash(){
   const pin=document.getElementById('inpPin').value.trim();
   if(!pin){ renderLogin('Mohon isi PIN.'); return; }
   renderLoading();
-  fetch(GAS_URL+'?action=all&pin='+encodeURIComponent(pin))
+  fetch(GAS_URL+'?action=all&pin='+encodeURIComponent(pin)+'&_ts='+Date.now(), {cache:'no-store'})
     .then(r=>r.json())
     .then(res=>{
       if(!res.ok){ renderLogin(res.error||'PIN salah.'); return; }
@@ -108,7 +108,7 @@ function loginDash(){
 
 function refreshData(){
   renderLoading();
-  fetch(GAS_URL+'?action=all&pin='+encodeURIComponent(dashPin))
+  fetch(GAS_URL+'?action=all&pin='+encodeURIComponent(dashPin)+'&_ts='+Date.now(), {cache:'no-store'})
     .then(r=>r.json())
     .then(res=>{
       if(!res.ok){ renderLogin(res.error||'Sesi berakhir, masuk kembali.'); return; }
