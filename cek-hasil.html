@@ -72,7 +72,7 @@ function lookup(){
   const nis=document.getElementById('inpNIS').value.trim();
   if(!/^\d{5}$/.test(nis)){ renderForm('Mohon isi 5 digit angka.'); return; }
   renderLoading();
-  fetch(GAS_URL+'?action=lookup&nis='+encodeURIComponent(nis))
+  fetch(GAS_URL+'?action=lookup&nis='+encodeURIComponent(nis)+'&_ts='+Date.now(), {cache:'no-store'})
     .then(r=>r.json())
     .then(res=>{
       if(!res.ok){ renderForm(res.error||'Data tidak ditemukan.'); return; }
