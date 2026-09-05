@@ -1409,10 +1409,16 @@ function showConfirmDialog(msgHtml,onYes,yesLabel,noLabel){
 }
 
 let heartbeatHandle=null;
+// Diperlonggar dari 40 detik -> 120 detik supaya hemat kuota "total runtime trigger per hari"
+// dari Google (90 menit/hari untuk akun konsumer). Dengan 700 peserta, tiap heartbeat yang
+// dikirim itu ikut memakan kuota harian ini, jadi interval yang lebih longgar = jauh lebih hemat.
+// Konsekuensinya: status di monitor-live.html jadi update tiap ~2 menit, bukan tiap 40 detik --
+// masih cukup untuk memantau progres peserta, cuma kurang "real-time" dibanding sebelumnya.
+const HEARTBEAT_INTERVAL_MS = 120000;
 function startHeartbeat(){
   if(heartbeatHandle) clearInterval(heartbeatHandle);
   sendHeartbeat();
-  heartbeatHandle=setInterval(sendHeartbeat, 40000);
+  heartbeatHandle=setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
 }
 function stopHeartbeat(){
   if(heartbeatHandle){ clearInterval(heartbeatHandle); heartbeatHandle=null; }
