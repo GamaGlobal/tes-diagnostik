@@ -744,12 +744,21 @@ const BAKAT_LABELS={
   INF:'Informatika & Logika Komputasi',
   VOK:'Vokasi & Keterampilan Teknis'
 };
-const BAKAT_DESC={
+const BAKAT_DESC_SMA={
   MIPA:'Kuat di penalaran matematis & sains. Mapel pilihan yang relevan: Matematika Tingkat Lanjut, Fisika, Kimia, Biologi.',
   IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Mapel pilihan yang relevan: Sosiologi, Ekonomi, Geografi, Antropologi.',
   BHS:'Kuat di bahasa & sastra. Mapel pilihan yang relevan: Bahasa Inggris Tingkat Lanjut, Bahasa/Sastra Indonesia Tingkat Lanjut, Bahasa asing pilihan.',
   INF:'Kuat di logika komputasional. Mapel pilihan yang relevan: Informatika.',
   VOK:'Kuat di keterampilan teknis-praktis. Mapel pilihan yang relevan: mata pelajaran Vokasi/Prakarya sesuai bidang keahlian.'
+};
+// SMP belum ada konsep "mapel pilihan" (itu konsep Kurikulum Merdeka jenjang SMA/SNBP), jadi
+// framing-nya diarahkan ke pengembangan bakat lewat kegiatan yang relevan, bukan pemilihan mapel.
+const BAKAT_DESC_SMP={
+  MIPA:'Kuat di penalaran matematis & sains. Arahkan bakat ini lewat: klub sains/matematika, olimpiade MIPA, eksperimen sains, atau ekstrakurikuler robotik.',
+  IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Arahkan bakat ini lewat: debat, jurnalistik sekolah/mading, OSIS/organisasi siswa, atau kegiatan sosial kemasyarakatan.',
+  BHS:'Kuat di bahasa & sastra. Arahkan bakat ini lewat: klub menulis, lomba pidato/debat bahasa, mading sekolah, atau kursus bahasa asing.',
+  INF:'Kuat di logika komputasional. Arahkan bakat ini lewat: klub coding/robotik, kompetisi informatika, atau belajar pemrograman dasar.',
+  VOK:'Kuat di keterampilan teknis-praktis. Arahkan bakat ini lewat: ekstrakurikuler keterampilan/prakarya, kursus keterampilan teknis, atau kegiatan vokasi tingkat dasar.'
 };
 const BAKAT_RAW=[
 ["MIPA","Jika sebuah benda jatuh bebas, kecepatannya akan ... seiring waktu.",["Tetap","Berkurang","Bertambah","Acak"],2],
@@ -1289,7 +1298,7 @@ function renderWelcome(){
         modBtn('IST','Tes IST (Kecerdasan)','Verbal, numerik, figural, memori — estimasi IQ')+
         modBtn('RIASEC','Tes Minat RIASEC','36 pernyataan minat karier (model Holland)')+
         modBtn('GAYA','Tes Gaya Belajar','24 pernyataan gaya belajar Visual/Auditori/Kinestetik')+
-        modBtn('BAKAT','Tes Bakat Diferensial','50 soal kemampuan — merekomendasikan mapel pilihan Kurikulum Merdeka')+
+        modBtn('BAKAT','Tes Bakat Diferensial',selectedLevel==='sma'?'50 soal kemampuan — merekomendasikan mapel pilihan Kurikulum Merdeka':'50 soal kemampuan — mengarahkan potensi bakat & kegiatan pengembangan yang relevan')+
       '</div>'+
     '</div>'+
     (selectedModules.IST ?
@@ -1784,7 +1793,7 @@ function computeResults(){
     }).sort((a,b)=>b.pct-a.pct);
     lastResults.bakatScores=Object.fromEntries(rows.map(r=>[r.key,r.pct]));
     lastResults.bakatTop=rows[0].key;
-    lastResults.bakatRekomendasi=BAKAT_DESC[rows[0].key];
+    lastResults.bakatRekomendasi=(currentLevel==='sma'?BAKAT_DESC_SMA:BAKAT_DESC_SMP)[rows[0].key];
   }
 }
 
