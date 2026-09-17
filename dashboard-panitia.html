@@ -52,7 +52,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
 
 const RIASEC_LABELS={R:'Realistic',I:'Investigative',A:'Artistic',S:'Social',E:'Enterprising',C:'Conventional'};
 const GAYA_LABELS={V:'Visual',A:'Auditori',K:'Kinestetik'};
-const BAKAT_LABELS={MIPA:'MIPA',IPS:'IPS',BHS:'Bahasa',INF:'Informatika',VOK:'Vokasi'};
+const BAKAT_LABELS={MIPA:'MIPA',IPS:'IPS',BHS:'Bahasa',INF:'Informatika',VOK:'Vokasi',AGM:'Keagamaan'};
 /* Harus sama dengan ITEM_BANK_VERSION di index.html. Dipakai untuk menandai hasil yang
    berasal dari sebelum audit psikometri (data lama tanpa field ini) agar tidak
    dibandingkan langsung dengan hasil dari bank soal yang sudah direvisi. */
@@ -185,7 +185,7 @@ function showDetail(idx){
   if(!d) return;
   const riasec={R:d['R (%)'],I:d['I (%)'],A:d['A (%)'],S:d['S (%)'],E:d['E (%)'],C:d['C (%)']};
   const gaya={V:d['Visual (%)'],A:d['Auditori (%)'],K:d['Kinestetik (%)']};
-  const bakat={MIPA:d['MIPA (%)'],IPS:d['IPS (%)'],BHS:d['Bahasa (%)'],INF:d['Informatika (%)'],VOK:d['Vokasi (%)']};
+  const bakat={MIPA:d['MIPA (%)'],IPS:d['IPS (%)'],BHS:d['Bahasa (%)'],INF:d['Informatika (%)'],VOK:d['Vokasi (%)'],AGM:d['Keagamaan (%)']};
   const domain={Verbal:d['Verbal (%)'],Numerik:d['Numerik (%)'],Figural:d['Figural (%)'],Memori:d['Memori (%)']};
   const rowsHtml=(obj,labels)=>Object.keys(obj).filter(k=>!isDash(obj[k])).sort((a,b)=>obj[b]-obj[a]).map(k=>'<div class="muted">'+(labels[k]||k)+': <strong>'+obj[k]+'%</strong></div>').join('');
 

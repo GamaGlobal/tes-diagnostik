@@ -197,7 +197,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
 /* Penanda revisi bank soal — dikirim bersama setiap hasil agar panitia bisa membedakan
    hasil yang menggunakan bank soal sebelum vs sesudah audit psikometri.
    Naikkan nilai ini setiap kali isi bank soal (SE/WA/AN/GE/FA/WU/dst.) diubah lagi. */
-const ITEM_BANK_VERSION = '2026-08-audit-v2';
+const ITEM_BANK_VERSION = '2026-09-sma-hard-v3';
 /* Supaya ratusan peserta yang selesai di waktu yang nyaris sama tidak semua kirim hasil
    ke server di detik yang sama persis, kirim hasil akhir ditunda acak 0 - SUBMIT_JITTER_MAX_MS
    milidetik. Halaman "Tes Selesai" tetap tampil langsung ke siswa, cuma pengiriman ke server-nya
@@ -350,114 +350,138 @@ const RA_RAW=[
 
 /* ============ QUESTION DATA: VERBAL — LEVEL SMA ============ */
 const SMA_SE_RAW=[
-["Karena proyek tersebut menuai kritik keras dari publik, perusahaan akhirnya memutuskan untuk ... rencana tersebut.",["melanjutkan","membatalkan","mempercepat","merahasiakan"],1],
-["Meskipun sudah diperingatkan berkali-kali, ia tetap ... pada kebiasaan buruknya.",["bertahan","berubah","menyesal","memperbaiki"],0],
-["Karena argumennya didukung banyak bukti kuat, pendapatnya menjadi semakin sulit untuk ... oleh lawan bicara.",["dipahami","dibantah","disetujui","diabaikan"],1],
-["Karena jadwal penerbangannya ditunda hingga larut malam, para penumpang mulai terlihat ... menunggu di ruang tunggu.",["gembira","gelisah","bersemangat","puas"],1],
-["Walaupun sudah berulang kali dijelaskan, ia tetap tidak ... maksud dari instruksi tersebut.",["memahami","menjalankan","mengabaikan","menyetujui"],0],
-["Karena selalu bersikap jujur dalam setiap situasi, ia dikenal sebagai orang yang sangat ... oleh rekan-rekannya.",["dipercaya","dicurigai","dihindari","diabaikan"],0],
-["Karena anggaran yang tersedia jauh lebih kecil daripada kebutuhan proyek, panitia terpaksa ... beberapa rencana kegiatan.",["menambah","memangkas","memperluas","mempercepat"],1],
-["Meskipun telah diberi banyak kesempatan, kualitas pekerjaannya tidak kunjung ... sejak awal bergabung.",["menurun","membaik","berubah drastis","memburuk"],1],
-["Karena harga bahan baku terus melonjak, para pengusaha kecil semakin ... untuk mempertahankan usahanya.",["bersemangat","kesulitan","diuntungkan","dimanjakan"],1],
-["Karena kedua bersaudara itu dibesarkan dalam lingkungan yang sama, sifat mereka pun terlihat cukup ... satu sama lain.",["bertentangan","mirip","asing","berlawanan"],1],
-["Semakin sering ia berlatih berbicara di depan umum, rasa gugupnya pun semakin ... setiap kali tampil.",["bertambah","berkurang","menetap","memuncak"],1],
-["Karena laporan itu ditulis tanpa data pendukung yang jelas, banyak pihak meragukan ... isinya.",["kejelasan","keakuratan","kepanjangan","keindahan"],1],
-["Setelah sistem baru diterapkan, proses produksi yang tadinya lambat kini menjadi jauh lebih ....",["efisien","rumit","mahal","berisiko"],0],
-["Karena tuduhan terhadapnya tidak didukung bukti apa pun, ia akhirnya dinyatakan ... oleh pengadilan.",["bersalah","tidak bersalah","terlambat","istimewa"],1],
-["Meskipun harga barang tersebut naik drastis, permintaan pasar terhadapnya justru tetap ... karena dianggap kebutuhan pokok.",["menurun tajam","tinggi","menghilang","tidak menentu"],1],
-["Karena selalu datang tepat waktu dan menyelesaikan tugas dengan baik, ia mendapat ... dari atasannya.",["teguran","apresiasi","peringatan","sanksi"],1],
-["Setelah melalui proses negosiasi yang panjang, kedua belah pihak akhirnya mencapai ... yang menguntungkan keduanya.",["perselisihan","kesepakatan","kebuntuan","konflik"],1],
-["Karena minim pengalaman di bidang tersebut, ia memilih untuk ... terlebih dahulu sebelum mengambil keputusan besar.",["nekat bertindak","berkonsultasi dengan ahli","mengabaikan saran","bertindak sendiri"],1],
-["Walaupun cuaca memburuk sepanjang perjalanan, tim pendaki itu tetap ... menuju puncak dengan penuh kehati-hatian.",["menyerah","melanjutkan","berbalik arah","berhenti total"],1],
-["Karena terus-menerus menunda pekerjaan, tugas yang menumpuk itu membuatnya semakin ... menjelang tenggat waktu.",["tenang","tertekan","santai","percaya diri"],1]
+["Meskipun telah diberi bukti-bukti yang meyakinkan, ia tetap ... untuk mengubah pendiriannya.",["bersedia", "menolak", "ragu", "berusaha"],1],
+["Kebijakan tersebut menuai pro dan kontra karena dianggap ... kepentingan kelompok tertentu.",["mengabaikan", "mendukung", "mengutamakan", "menghambat"],2],
+["Bukan hanya berdampak pada sektor ekonomi, kebijakan itu juga ... stabilitas sosial masyarakat.",["memperkuat", "mengguncang", "mengabaikan", "melengkapi"],1],
+["Karena argumentasinya dibangun di atas asumsi yang keliru, kesimpulan yang diambilnya menjadi ... dipertahankan.",["mudah", "sulit", "layak", "penting"],1],
+["Alih-alih menyelesaikan konflik, mediator tersebut justru ... ketegangan di antara kedua pihak.",["meredakan", "memperuncing", "mengabaikan", "menengahi"],1],
+["Data yang disajikan tanpa konteks yang memadai berpotensi ... pembaca terhadap fakta yang sebenarnya.",["mencerahkan", "menyesatkan", "meyakinkan", "mengingatkan"],1],
+["Sikapnya yang selalu ... terhadap kritik membuat rekan-rekannya enggan memberikan masukan.",["terbuka", "defensif", "reflektif", "adaptif"],1],
+["Perusahaan itu terpaksa melakukan efisiensi besar-besaran akibat ... pendapatan yang berkepanjangan.",["kenaikan", "stagnasi", "penyusutan", "pemulihan"],2],
+["Karena minim bukti pendukung, tuduhan tersebut akhirnya ... oleh pihak berwenang.",["dibenarkan", "dikuatkan", "dimentahkan", "disebarluaskan"],2],
+["Meski terkesan sepele, kelalaian kecil semacam itu dapat berakibat ... bagi keselamatan banyak orang.",["fatal", "ringan", "wajar", "biasa"],0],
+["Ia dikenal sebagai sosok yang selalu ... pendapat orang lain sebelum mengambil keputusan penting.",["mengabaikan", "mempertimbangkan", "menyepelekan", "menolak"],1],
+["Ketimbang mengakui kesalahannya, ia justru ... tanggung jawab kepada rekan setimnya.",["memikul", "melimpahkan", "menerima", "menanggung"],1],
+["Fenomena tersebut sulit dijelaskan secara ilmiah karena minimnya data yang dapat ....",["diabaikan", "diverifikasi", "disangkal", "diperdebatkan"],1],
+["Guru itu selalu berusaha ... materi yang rumit menjadi lebih mudah dipahami siswanya.",["mempersulit", "menyederhanakan", "memperumit", "mengaburkan"],1],
+["Karena terlalu banyak intervensi dari pihak luar, proses negosiasi menjadi ... dan berlarut-larut.",["lancar", "efisien", "berbelit-belit", "singkat"],2],
+["Meskipun anggarannya terbatas, tim tersebut tetap berhasil ... target yang telah ditetapkan.",["mengabaikan", "mencapai", "menunda", "membatalkan"],1],
+["Pernyataan yang disampaikan tanpa data pendukung cenderung dianggap ... oleh khalayak yang kritis.",["meyakinkan", "spekulatif", "akurat", "otentik"],1],
+["Karena reputasinya yang telah tercoreng, ia kesulitan untuk ... kembali kepercayaan publik.",["menjaga", "memulihkan", "mempertahankan", "meningkatkan"],1],
+["Kebijakan yang diterapkan secara terburu-buru itu akhirnya ... berbagai masalah baru yang tak terduga.",["mencegah", "menimbulkan", "menyelesaikan", "meniadakan"],1],
+["Alih-alih memperkuat argumen utamanya, ia justru terjebak dalam detail-detail yang ....",["relevan", "substansial", "tidak substansial", "krusial"],2]
 ];
 
 const SMA_WA_RAW=[
-[["Oksigen","Nitrogen","Karbon dioksida","Air"],3],
-[["Demokrasi","Monarki","Oligarki","Konstitusi"],3],
-[["Mitosis","Meiosis","Fotosintesis","Fertilisasi"],2],
-[["Sonata","Simfoni","Konserto","Prosa"],3],
-[["Asteroid","Komet","Meteor","Galaksi"],3],
-[["Inflasi","Deflasi","Resesi","Metamorfosis"],3],
-[["Segitiga siku-siku","Lingkaran","Persegi panjang","Kubus"],3],
-[["Adjektiva","Verba","Nomina","Paragraf"],3],
-[["Litosfer","Atmosfer","Hidrosfer","Fauna"],3],
-[["Konduktor","Isolator","Semikonduktor","Voltase"],3],
-[["Protagonis","Antagonis","Tritagonis","Alur"],3],
-[["Pancasila","UUD 1945","Bhinneka Tunggal Ika","Presiden"],3],
-[["Karbohidrat","Protein","Lemak","Enzim"],3],
-[["Barisan aritmetika","Barisan geometri","Deret Fibonacci","Persamaan kuadrat"],3],
-[["Ekspor","Impor","Neraca perdagangan","Mitosis"],3],
-[["Vertebrata","Invertebrata","Mamalia","Metamorfosis"],3],
-[["Asam","Basa","Garam","Molekul"],3],
-[["Puisi","Cerpen","Novel","Deklamasi"],3],
-[["Longitudinal","Transversal","Elektromagnetik","Amplitudo"],3],
-[["Republik","Federasi","Kesatuan","Presiden"],3]
+[["Oksidasi", "Reduksi", "Netralisasi", "Evaporasi"],3],
+[["Sonet", "Pantun", "Syair", "Prosa"],3],
+[["Nasionalisme", "Patriotisme", "Chauvinisme", "Individualisme"],3],
+[["Tundra", "Taiga", "Sabana", "Estuari"],3],
+[["Isobar", "Isoterm", "Isohyet", "Isotop"],3],
+[["Anabolisme", "Katabolisme", "Metabolisme", "Metamorfisme"],3],
+[["Monopoli", "Oligopoli", "Monopsoni", "Deflasi"],3],
+[["Asimilasi", "Akulturasi", "Akomodasi", "Disosiasi"],3],
+[["Konveksi", "Konduksi", "Radiasi", "Refraksi"],3],
+[["Interpelasi", "Angket", "Budget", "Ratifikasi"],3],
+[["Introver", "Ekstrover", "Ambivert", "Asertif"],3],
+[["Elastisitas", "Plastisitas", "Viskositas", "Populasi"],3],
+[["Epidermis", "Dermis", "Hipodermis", "Epidemi"],3],
+[["Fauna", "Flora", "Biota", "Geosfer"],3],
+[["Hipotesis", "Variabel", "Populasi", "Preposisi"],3],
+[["Simbiosis mutualisme", "Simbiosis parasitisme", "Simbiosis komensalisme", "Adaptasi morfologi"],3],
+[["Deduktif", "Induktif", "Silogisme", "Deskriptif"],3],
+[["Autokrasi", "Oligarki", "Teokrasi", "Birokrasi"],3],
+[["Vokal rangkap", "Diftong", "Konsonan", "Monoftong"],2],
+[["Resesi", "Depresi ekonomi", "Stagflasi", "Stagnasi mental"],3]
 ];
 
 const SMA_AN_RAW=[
-["Termometer","Suhu","Barometer",["Kelembapan","Tekanan udara","Kecepatan angin","Curah hujan"],1],
-["Oksigen","Bernapas","Klorofil",["Berkembang biak","Fotosintesis","Respirasi","Ekskresi"],1],
-["Konstitusi","Negara","Anggaran Dasar",["Organisasi","Presiden","Rakyat","Hakim"],0],
-["Penulis","Novel","Komposer",["Lukisan","Simfoni","Patung","Drama"],1],
-["Asam","pH rendah","Basa",["pH rendah","pH tinggi","pH netral","Tidak berpH"],1],
-["Inflasi","Kenaikan harga","Deflasi",["Kenaikan harga","Penurunan harga","Harga tetap","Krisis moneter"],1],
-["DNA","Gen","Buku",["Sampul","Bab","Penulis","Penerbit"],1],
-["Jantung","Memompa darah","Ginjal",["Mencerna makanan","Menyaring darah","Bernapas","Berpikir"],1],
-["Fotosintesis","Tumbuhan","Respirasi seluler",["Batu","Semua makhluk hidup","Air","Udara"],1],
-["Legislatif","Membuat undang-undang","Yudikatif",["Menjalankan pemerintahan","Mengadili pelanggaran hukum","Memungut pajak","Mencetak uang"],1],
-["Bilangan prima","2,3,5,7","Bilangan genap",["1,3,5,7","2,4,6,8","3,6,9,12","1,4,9,16"],1],
-["Meiosis","Sel kelamin","Mitosis",["Sel kelamin","Sel tubuh","Sel darah merah saja","Virus"],1],
-["Gempa bumi","Seismograf","Suhu",["Barometer","Termometer","Higrometer","Anemometer"],1],
-["Produsen","Tumbuhan","Konsumen",["Matahari","Herbivora","Tanah","Air"],1],
-["Revolusi","Perubahan cepat","Evolusi",["Perubahan mendadak","Perubahan bertahap","Tidak ada perubahan","Perubahan acak"],1],
-["Premis","Kesimpulan","Sebab",["Alasan","Akibat","Fakta","Data"],1],
-["Elektron","Bermuatan negatif","Proton",["Bermuatan negatif","Bermuatan positif","Tidak bermuatan","Bermuatan ganda"],1],
-["Puisi","Bait","Cerpen",["Rima","Paragraf","Diksi","Alur saja"],1],
-["Ekspor","Menjual ke luar negeri","Impor",["Menjual ke luar negeri","Membeli dari luar negeri","Menyimpan barang","Memproduksi barang"],1],
-["Katalis","Mempercepat reaksi","Inhibitor",["Mempercepat reaksi","Memperlambat reaksi","Tidak berpengaruh","Mengubah warna"],1]
+["Aksioma","Teorema","Premis",["Argumen", "Kesimpulan", "Fakta", "Data"],1],
+["Antibodi","Antigen","Kunci",["Pintu", "Gembok", "Rumah", "Gerbang"],1],
+["Inflasi","Daya beli turun","Deflasi",["Daya beli turun", "Daya beli naik", "Harga naik", "Produksi turun"],1],
+["Vaksin","Pencegahan","Antibiotik",["Pencegahan", "Pengobatan", "Diagnosis", "Deteksi"],1],
+["Sentripetal","Menuju pusat","Sentrifugal",["Menuju pusat", "Menjauhi pusat", "Melingkar", "Berputar"],1],
+["Oligarki","Segelintir orang","Monarki",["Rakyat", "Satu orang", "Banyak orang", "Partai"],1],
+["Konkaf","Cekung","Konveks",["Cekung", "Cembung", "Datar", "Lurus"],1],
+["Nekrosis","Kematian sel akibat cedera","Apoptosis",["Kematian sel terprogram", "Pembelahan sel", "Pertumbuhan sel", "Mutasi sel"],0],
+["Barter","Tanpa uang","Kredit",["Tanpa uang", "Pembayaran ditunda", "Pembayaran tunai", "Tanpa jaminan"],1],
+["Amnesia","Kehilangan ingatan","Insomnia",["Kehilangan ingatan", "Kesulitan tidur", "Kehilangan nafsu makan", "Gangguan bicara"],1],
+["Konduktor","Menghantarkan","Isolator",["Menghantarkan", "Menghambat", "Menyimpan", "Melipatgandakan"],1],
+["Fusi nuklir","Penggabungan inti","Fisi nuklir",["Penggabungan inti", "Pembelahan inti", "Peluruhan radioaktif", "Ionisasi"],1],
+["Preseden","Kasus hukum sebelumnya","Referensi",["Kasus hukum sebelumnya", "Sumber rujukan", "Dokumen resmi", "Bukti fisik"],1],
+["Xerofit","Tumbuhan gurun","Hidrofit",["Tumbuhan gurun", "Tumbuhan air", "Tumbuhan pegunungan", "Tumbuhan pantai"],1],
+["Otokrasi","Kekuasaan mutlak satu pihak","Anarki",["Kekuasaan mutlak satu pihak", "Ketiadaan pemerintahan", "Kekuasaan rakyat", "Kekuasaan militer"],1],
+["Metafora","Perbandingan implisit","Simile",["Perbandingan implisit", "Perbandingan eksplisit", "Pengulangan bunyi", "Pertentangan makna"],1],
+["Endoterm","Suhu tubuh internal stabil","Ektoterm",["Suhu tubuh internal stabil", "Suhu tubuh bergantung lingkungan", "Tidak memiliki suhu tubuh", "Suhu tubuh selalu tinggi"],1],
+["Devaluasi","Penurunan nilai mata uang oleh pemerintah","Depresiasi",["Penurunan nilai mata uang oleh pemerintah", "Penurunan nilai mata uang oleh mekanisme pasar", "Kenaikan nilai mata uang oleh pemerintah", "Kestabilan nilai mata uang"],1],
+["Litotes","Merendahkan secara berlebihan","Hiperbola",["Merendahkan secara berlebihan", "Melebih-lebihkan", "Menyindir halus", "Membandingkan langsung"],1],
+["Adiabatik","Tanpa pertukaran kalor","Isotermal",["Tanpa pertukaran kalor", "Suhu tetap konstan", "Tekanan tetap konstan", "Volume tetap konstan"],1]
 ];
 
 const SMA_GE_RAW=[
-["Mitosis","Meiosis",["Proses pembelahan sel","Proses metabolisme sel","Proses transportasi zat dalam sel","Jenis jaringan sel"],0],
-["Inflasi","Deflasi",["Jenis kebijakan fiskal","Fenomena perubahan tingkat harga umum","Jenis kebijakan moneter","Bentuk investasi jangka panjang"],1],
-["Demokrasi","Monarki",["Bentuk negara","Sistem pemerintahan","Ideologi politik","Sistem ekonomi"],1],
-["Asam","Basa",["Golongan senyawa kimia berdasarkan sifat pH","Golongan senyawa kimia berdasarkan wujud zat","Golongan senyawa kimia berdasarkan ikatan","Jenis reaksi kimia"],0],
-["Novel","Cerpen",["Karya sastra berbentuk prosa","Karya sastra berbentuk puisi","Naskah drama","Karya sastra lisan"],0],
-["Legislatif","Yudikatif",["Cabang kekuasaan dalam pemerintahan","Lembaga negara nonstruktural","Partai politik","Organisasi kemasyarakatan"],0],
-["Longitudinal","Transversal",["Jenis gelombang berdasarkan arah rambat","Jenis gelombang berdasarkan medium rambat","Jenis gelombang elektromagnetik saja","Sifat gelombang bunyi"],0],
-["Ekspor","Impor",["Kegiatan perdagangan internasional","Kegiatan produksi dalam negeri","Kebijakan fiskal","Jenis pajak perdagangan"],0],
-["Protagonis","Antagonis",["Tokoh utama dalam cerita","Unsur intrinsik cerita berupa alur","Gaya bahasa","Unsur puisi"],0],
-["Karbohidrat","Protein",["Zat makronutrien bagi tubuh","Jenis vitamin","Jenis mineral esensial","Jenis hormon tubuh"],0],
-["Barisan aritmetika","Barisan geometri",["Pola bilangan matematis","Bentuk fungsi kuadrat","Jenis persamaan diferensial","Bentuk geometri ruang"],0],
-["Litosfer","Hidrosfer",["Lapisan bumi","Lapisan atmosfer","Jenis batuan beku","Jenis mineral tambang"],0],
-["Elektron","Proton",["Partikel penyusun atom","Jenis unsur kimia","Jenis ikatan kimia","Jenis molekul"],0],
-["Puisi","Prosa",["Bentuk karya sastra","Jenis majas","Unsur intrinsik cerita","Aliran sastra"],0],
-["Revolusi","Evolusi",["Proses perubahan","Sistem pemerintahan","Cabang ilmu biologi","Jenis fenomena sosial"],0],
-["Katalis","Inhibitor",["Zat yang memengaruhi laju reaksi kimia","Jenis larutan asam","Jenis larutan basa","Golongan logam"],0]
+["Nekrosis","Apoptosis",["Jenis kematian sel", "Jenis pembelahan sel", "Jenis mutasi genetik", "Jenis jaringan tubuh"],0],
+["Devaluasi","Depresiasi",["Penurunan nilai mata uang", "Kenaikan nilai mata uang", "Kebijakan fiskal", "Kebijakan perdagangan"],0],
+["Fusi nuklir","Fisi nuklir",["Reaksi yang melibatkan inti atom", "Reaksi kimia biasa", "Proses peluruhan zat radioaktif", "Proses ionisasi gas"],0],
+["Oligarki","Plutokrasi",["Sistem pemerintahan oleh sekelompok kecil elite", "Sistem pemerintahan oleh rakyat", "Sistem pemerintahan oleh militer", "Sistem pemerintahan oleh agamawan"],0],
+["Metafora","Simile",["Majas perbandingan", "Majas pertentangan", "Majas sindiran", "Majas penegasan"],0],
+["Xerofit","Hidrofit",["Klasifikasi tumbuhan berdasarkan habitat air", "Klasifikasi tumbuhan berdasarkan cara berkembang biak", "Jenis tumbuhan berbunga", "Jenis tumbuhan berbiji tertutup"],0],
+["Adiabatik","Isotermal",["Proses termodinamika gas", "Jenis gelombang bunyi", "Sifat kemagnetan bahan", "Hukum kekekalan massa"],0],
+["Asimilasi","Akulturasi",["Proses sosial akibat percampuran budaya", "Proses sosial yang bersifat memecah belah", "Bentuk konflik antarkelompok", "Bentuk penyimpangan sosial"],0],
+["Konveksi","Konduksi",["Cara perpindahan kalor", "Cara perambatan cahaya", "Cara perambatan bunyi", "Jenis gaya pada benda"],0],
+["Deduktif","Induktif",["Pola penalaran dalam menarik kesimpulan", "Jenis paragraf naratif", "Struktur teks eksposisi", "Jenis majas dalam puisi"],0],
+["Resesi","Depresi ekonomi",["Kondisi perlambatan/penurunan aktivitas ekonomi", "Kondisi pertumbuhan ekonomi pesat", "Kebijakan moneter ekspansif", "Kebijakan fiskal ketat"],0],
+["Antiklin","Sinklin",["Struktur lipatan pada batuan akibat tenaga tektonik", "Jenis batuan beku", "Jenis patahan akibat gempa", "Bentuk permukaan bumi akibat erosi"],0],
+["Interpelasi","Hak angket",["Hak DPR dalam mengawasi pemerintah", "Hak presiden dalam membuat kebijakan", "Hak warga negara dalam pemilu", "Hak yudikatif dalam mengadili"],0],
+["Epidermis","Dermis",["Lapisan penyusun kulit", "Lapisan penyusun tulang", "Jenis jaringan otot", "Jenis sel darah"],0],
+["Litotes","Hiperbola",["Majas yang melibatkan pernyataan tidak sesuai kenyataan", "Majas pertentangan makna", "Majas perbandingan langsung", "Jenis rima dalam puisi"],0],
+["Isobar","Isohyet",["Garis pada peta yang menghubungkan titik dengan nilai sama", "Jenis awan penyebab hujan", "Skala pengukuran suhu udara", "Alat pengukur curah hujan"],0]
 ];
 
 const SMA_RA_RAW=[
-["Jika 2x + 5 = 17, berapakah nilai x?",["5","6","7","8"],1],
-["Sebuah dadu dilempar sekali. Berapa peluang muncul angka genap?",["1/6","1/3","1/2","2/3"],2],
-["Jika f(x) = 3x² − 2, berapa nilai f(2)?",["8","10","12","14"],1],
-["Suatu barisan aritmetika: 3, 7, 11, 15, .... Berapa suku ke-10?",["35","39","41","43"],1],
-["Jika log 2 = 0,301, berapa nilai log 8? (log 8 = 3 log 2)",["0,602","0,903","1,204","1,505"],1],
-["Sebuah segitiga siku-siku memiliki sisi 6 cm dan 8 cm. Berapa panjang sisi miringnya?",["9 cm","10 cm","12 cm","14 cm"],1],
-["Dalam suatu kelas, perbandingan siswa laki-laki dan perempuan adalah 3:5. Jika jumlah siswa 40, berapa jumlah siswa laki-laki?",["12","15","18","20"],1],
-["Jika P(A) = 0,4 dan P(B) = 0,3 dan A, B saling bebas, berapa P(A dan B)?",["0,12","0,7","0,1","0,35"],0],
-["Sebuah mobil dibeli seharga Rp200.000.000 dan mengalami penyusutan 10% per tahun. Berapa nilainya setelah 1 tahun?",["Rp160.000.000","Rp170.000.000","Rp180.000.000","Rp190.000.000"],2],
-["Jika 3/4 dari suatu bilangan adalah 60, berapa bilangan tersebut?",["75","80","85","90"],1],
-["Suatu bunga majemuk 10% per tahun, modal awal Rp1.000.000. Berapa nilai setelah 2 tahun (dibulatkan)?",["Rp1.200.000","Rp1.210.000","Rp1.220.000","Rp1.100.000"],1],
-["Median dari data: 4, 8, 6, 5, 9, 7, 3 adalah ....",["5","6","7","8"],1],
-["Jika sin θ = 0,6 dan θ sudut lancip, berapa nilai cos θ?",["0,4","0,6","0,8","1,0"],2],
-["Volume kubus dengan panjang rusuk 5 cm adalah ....",["100 cm³","125 cm³","150 cm³","175 cm³"],1],
-["Jika himpunan A={1,2,3,4} dan B={3,4,5,6}, berapa banyak anggota A∩B?",["1","2","3","4"],1],
-["Suatu fungsi kuadrat y = x² − 4x + 3 memiliki akar-akar ....",["1 dan 3","−1 dan 3","1 dan −3","2 dan 3"],0],
-["Sebuah kereta melaju dengan percepatan konstan dari 0 menjadi 20 m/s dalam 5 detik. Berapa percepatannya?",["2 m/s²","4 m/s²","5 m/s²","10 m/s²"],1],
-["Jika harga barang naik 25% menjadi Rp125.000, berapa harga awal?",["Rp95.000","Rp100.000","Rp105.000","Rp110.000"],1],
-["Dalam suatu ujian, nilai standar deviasi menunjukkan ....",["Nilai rata-rata data","Sebaran/variasi data dari rata-rata","Nilai tertinggi data","Jumlah total data"],1],
-["Jika 5 orang dapat menyelesaikan proyek dalam 12 hari, berapa hari yang dibutuhkan 3 orang (kecepatan kerja sama)?",["15 hari","18 hari","20 hari","24 hari"],2]
+["Jika 3x − 7 = 2x + 5, maka nilai x adalah ....",["10", "11", "12", "13"],2],
+["Sebuah tangki berisi air sebanyak 3/5 dari kapasitasnya. Jika ditambahkan 40 liter, tangki menjadi penuh. Berapa kapasitas tangki?",["80 liter", "90 liter", "100 liter", "120 liter"],2],
+["Harga sebuah baju setelah diskon 20% adalah Rp160.000. Berapa harga sebelum diskon?",["Rp180.000", "Rp190.000", "Rp200.000", "Rp210.000"],2],
+["Dua kota A dan B berjarak 240 km. Mobil pertama berangkat dari A pukul 08.00 dengan kecepatan 60 km/jam, mobil kedua dari B pukul 08.00 menuju A dengan kecepatan 80 km/jam. Sekitar pukul berapa keduanya berpapasan?",["09.30", "09.43", "09.50", "10.00"],1],
+["Sebuah pekerjaan dapat diselesaikan oleh 8 orang dalam 15 hari. Jika pekerjaan itu harus selesai dalam 10 hari, berapa orang tambahan yang diperlukan (kecepatan kerja tiap orang sama)?",["2 orang", "3 orang", "4 orang", "5 orang"],2],
+["Jika P(A)=0,5, P(B)=0,4, dan P(A∩B)=0,2, berapa P(A∪B)?",["0,5", "0,6", "0,7", "0,9"],2],
+["Suatu barisan geometri memiliki suku pertama 5 dan rasio 3. Berapa jumlah 4 suku pertamanya?",["150", "180", "200", "220"],2],
+["Sebuah toko memberi diskon 10%, lalu diskon tambahan 10% dari harga setelah diskon pertama. Jika harga awal Rp500.000, berapa harga akhirnya?",["Rp390.000", "Rp400.000", "Rp405.000", "Rp410.000"],2],
+["Jika log 3 = 0,477, berapa nilai log 27? (log 27 = 3 log 3)",["1,341", "1,431", "1,477", "1,531"],1],
+["Rata-rata nilai 8 siswa adalah 75. Jika ditambahkan 2 siswa baru dengan nilai 90 dan 85, berapa rata-rata 10 siswa tersebut?",["76,5", "77", "77,5", "78"],2],
+["Sebuah kolam diisi pipa A dalam 6 jam dan pipa B dalam 12 jam (sendiri-sendiri). Jika kedua pipa dibuka bersamaan, berapa jam kolam terisi penuh?",["3 jam", "4 jam", "5 jam", "6 jam"],1],
+["Segitiga siku-siku memiliki sudut 30° dan panjang sisi di depan sudut tersebut 5 cm. Berapa panjang sisi miringnya?",["8 cm", "9 cm", "10 cm", "12 cm"],2],
+["Jika sebuah bilangan dikalikan 4 kemudian dikurangi 9 menghasilkan 39, berapa bilangan tersebut?",["10", "11", "12", "13"],2],
+["Penjualan sebuah perusahaan naik 20% pada tahun kedua, lalu turun 25% pada tahun ketiga (dari nilai tahun kedua). Jika penjualan tahun pertama Rp100 juta, berapa penjualan tahun ketiga?",["Rp85 juta", "Rp90 juta", "Rp95 juta", "Rp100 juta"],1],
+["Simpangan baku suatu data bernilai 4, dengan rata-rata 60. Berapa nilai yang berada tepat 2 simpangan baku di atas rata-rata?",["64", "66", "68", "70"],2],
+["Dua dadu dilempar bersamaan. Berapa peluang jumlah kedua mata dadu sama dengan 8?",["4/36", "5/36", "6/36", "7/36"],1],
+["Suatu barisan aritmetika memiliki suku ke-3 = 11 dan suku ke-7 = 27. Berapa beda barisan tersebut?",["3", "4", "5", "6"],1],
+["Modal Rp2.000.000 dibungakan secara majemuk 5% per tahun. Berapa nilai modal setelah 2 tahun?",["Rp2.100.000", "Rp2.150.000", "Rp2.200.000", "Rp2.205.000"],3],
+["Jika 5 apel dan 3 jeruk berharga Rp37.000, sedangkan 3 apel dan 5 jeruk berharga Rp35.000, berapa harga 1 apel?",["Rp4.000", "Rp4.500", "Rp5.000", "Rp5.500"],2],
+["Sebuah persegi panjang memiliki keliling 56 cm. Jika panjangnya 4 cm lebih besar dari lebarnya, berapa luas persegi panjang tersebut?",["180 cm²", "188 cm²", "192 cm²", "196 cm²"],2]
+];
+
+/* ============ QUESTION DATA: DERET ANGKA (ZR) — LEVEL SMA (bank tetap, disamakan dengan v2) ============ */
+const SMA_ZR_RAW=[
+[["1", "2", "4", "7", "11", "16"],["20", "21", "22", "23"],2],
+[["2", "3", "5", "8", "13", "21"],["30", "32", "34", "36"],2],
+[["1", "4", "9", "16", "25"],["30", "32", "34", "36"],3],
+[["100", "95", "85", "70", "50"],["20", "25", "30", "35"],1],
+[["3", "4", "7", "11", "18", "29"],["40", "44", "47", "50"],2],
+[["2", "5", "11", "23", "47"],["89", "92", "95", "98"],2],
+[["5", "6", "10", "19", "35"],["55", "58", "60", "64"],2],
+[["81", "27", "9", "3", "1"],["0", "1/3", "-1", "1/2"],1],
+[["1", "1", "2", "3", "5", "8", "13"],["18", "20", "21", "24"],2],
+[["2", "6", "12", "20", "30"],["36", "40", "42", "45"],2],
+[["4", "9", "19", "39", "79"],["149", "155", "159", "163"],2],
+[["7", "10", "16", "28", "52"],["94", "98", "100", "104"],2],
+[["1", "3", "6", "10", "15", "21"],["26", "27", "28", "30"],2],
+[["2", "4", "8", "14", "22", "32"],["40", "42", "44", "46"],2],
+[["200", "100", "150", "75", "125"],["50", "62,5", "70", "87,5"],1],
+[["3", "5", "9", "17", "33"],["61", "63", "65", "67"],2],
+[["1", "2", "6", "24", "120"],["600", "660", "720", "750"],2],
+[["6", "11", "21", "41", "81"],["151", "155", "161", "165"],2],
+[["90", "88", "84", "76", "60"],["24", "26", "28", "30"],2],
+[["1", "5", "13", "29", "61"],["115", "120", "125", "130"],2]
 ];
 
 /* ============ GENERATORS: NUMERIC SERIES (ZR) ============ */
@@ -742,14 +766,20 @@ const BAKAT_LABELS={
   IPS:'Ilmu Pengetahuan Sosial (IPS)',
   BHS:'Bahasa & Sastra',
   INF:'Informatika & Logika Komputasi',
-  VOK:'Vokasi & Keterampilan Teknis'
+  VOK:'Vokasi & Keterampilan Teknis',
+  AGM:'Ilmu Keagamaan (Tafsir-Hadis-Fiqih)'
 };
+// Rekomendasi mapel pilihan kelas XI disamakan dengan daftar resmi "Komponen Mapel
+// Pendukung" sekolah (Ilmu Tafsir, Ilmu Hadis, Ushul Fiqih, B.Arab TL, B.Indo TL,
+// B.Inggris TL, MTK TL, Kimia, Fisika, Biologi, Informatika, Ekonomi, Geografi,
+// Sosiologi, Sejarah TL, Keterampilan).
 const BAKAT_DESC_SMA={
-  MIPA:'Kuat di penalaran matematis & sains. Mapel pilihan yang relevan: Matematika Tingkat Lanjut, Fisika, Kimia, Biologi.',
-  IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Mapel pilihan yang relevan: Sosiologi, Ekonomi, Geografi, Antropologi.',
-  BHS:'Kuat di bahasa & sastra. Mapel pilihan yang relevan: Bahasa Inggris Tingkat Lanjut, Bahasa/Sastra Indonesia Tingkat Lanjut, Bahasa asing pilihan.',
+  MIPA:'Kuat di penalaran matematis & sains. Mapel pilihan yang relevan: Matematika Tingkat Lanjut (MTK TL), Fisika, Kimia, Biologi.',
+  IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Mapel pilihan yang relevan: Ekonomi, Geografi, Sosiologi, Sejarah Tingkat Lanjut (Sejarah TL).',
+  BHS:'Kuat di bahasa & sastra. Mapel pilihan yang relevan: Bahasa Indonesia Tingkat Lanjut (B.Indo TL), Bahasa Inggris Tingkat Lanjut (B.Inggris TL).',
   INF:'Kuat di logika komputasional. Mapel pilihan yang relevan: Informatika.',
-  VOK:'Kuat di keterampilan teknis-praktis. Mapel pilihan yang relevan: mata pelajaran Vokasi/Prakarya sesuai bidang keahlian.'
+  VOK:'Kuat di keterampilan teknis-praktis. Mapel pilihan yang relevan: Keterampilan.',
+  AGM:'Kuat di pemahaman teks & penalaran keagamaan. Mapel pilihan yang relevan: Ilmu Tafsir, Ilmu Hadis, Ushul Fiqih, Bahasa Arab Tingkat Lanjut (B.Arab TL).'
 };
 // SMP belum ada konsep "mapel pilihan" (itu konsep Kurikulum Merdeka jenjang SMA/SNBP), jadi
 // framing-nya diarahkan ke pengembangan bakat lewat kegiatan yang relevan, bukan pemilihan mapel.
@@ -758,7 +788,8 @@ const BAKAT_DESC_SMP={
   IPS:'Kuat di pemahaman fenomena sosial-ekonomi. Arahkan bakat ini lewat: debat, jurnalistik sekolah/mading, OSIS/organisasi siswa, atau kegiatan sosial kemasyarakatan.',
   BHS:'Kuat di bahasa & sastra. Arahkan bakat ini lewat: klub menulis, lomba pidato/debat bahasa, mading sekolah, atau kursus bahasa asing.',
   INF:'Kuat di logika komputasional. Arahkan bakat ini lewat: klub coding/robotik, kompetisi informatika, atau belajar pemrograman dasar.',
-  VOK:'Kuat di keterampilan teknis-praktis. Arahkan bakat ini lewat: ekstrakurikuler keterampilan/prakarya, kursus keterampilan teknis, atau kegiatan vokasi tingkat dasar.'
+  VOK:'Kuat di keterampilan teknis-praktis. Arahkan bakat ini lewat: ekstrakurikuler keterampilan/prakarya, kursus keterampilan teknis, atau kegiatan vokasi tingkat dasar.',
+  AGM:'Kuat di pemahaman teks & penalaran keagamaan. Arahkan bakat ini lewat: kajian tafsir/hadis, tahfiz, muhadatsah bahasa Arab, atau ekstrakurikuler kerohanian.'
 };
 const BAKAT_RAW=[
 ["MIPA","Jika sebuah benda jatuh bebas, kecepatannya akan ... seiring waktu.",["Tetap","Berkurang","Bertambah","Acak"],2],
@@ -814,7 +845,18 @@ const BAKAT_RAW=[
 ["VOK","Jika dua gaya bekerja berlawanan arah dengan besar sama, benda akan ....",["Bergerak cepat","Diam/seimbang","Berputar","Hancur"],1],
 ["VOK","Alat pelindung diri (APD) wajib dipakai saat kerja bengkel untuk ....",["Bergaya","Keselamatan kerja","Formalitas","Tidak penting"],1],
 ["VOK","Sistem yang mengatur aliran air ke seluruh bangunan disebut instalasi ....",["Elektrikal","Plambing","Mekanikal","Struktural"],1],
-["VOK","Kayu yang telah dikeringkan bertujuan agar ....",["Lebih berat","Tidak mudah menyusut/melengkung","Berubah warna","Lebih murah"],1]
+["VOK","Kayu yang telah dikeringkan bertujuan agar ....",["Lebih berat","Tidak mudah menyusut/melengkung","Berubah warna","Lebih murah"],1],
+
+["AGM","Ilmu yang mempelajari penafsiran ayat-ayat Al-Qur'an disebut ilmu ....",["Tafsir", "Hadis", "Fiqih", "Nahwu"],0],
+["AGM","Perkataan, perbuatan, dan ketetapan Nabi Muhammad ﷺ yang dijadikan sumber hukum disebut ....",["Al-Qur'an", "Hadis", "Ijma'", "Qiyas"],1],
+["AGM","Ilmu yang membahas hukum-hukum syariat berdasarkan dalil-dalil terperinci disebut ....",["Fiqih", "Tauhid", "Akhlak", "Balaghah"],0],
+["AGM","Dalam ilmu hadis, rangkaian para perawi yang menyampaikan sebuah hadis disebut ....",["Matan", "Sanad", "Rawi", "Takhrij"],1],
+["AGM","Kata dalam bahasa Arab yang menunjukkan pekerjaan/perbuatan disebut ....",["Isim", "Fi'il", "Harf", "Dhamir"],1],
+["AGM","Sumber hukum Islam yang berupa kesepakatan para ulama disebut ....",["Ijma'", "Qiyas", "Istihsan", "Urf"],0],
+["AGM","Menganalogikan suatu masalah baru dengan hukum yang sudah ada karena kesamaan sebab disebut ....",["Ijma'", "Qiyas", "Istishab", "Maslahah"],1],
+["AGM","Kitab tafsir klasik yang banyak dirujuk dalam kajian Al-Qur'an ditulis oleh ....",["Imam Al-Ghazali", "Ibnu Katsir", "Imam Bukhari", "Imam Syafi'i"],1],
+["AGM","Ilmu yang mempelajari kaidah tata bahasa Arab dari sisi struktur kalimat (i'rab) disebut ....",["Sharaf", "Nahwu", "Balaghah", "Arudh"],1],
+["AGM","Hukum mempelajari ilmu agama dasar yang menjadi kewajiban bagi setiap muslim disebut ....",["Fardhu 'ain", "Fardhu kifayah", "Sunnah muakkad", "Mubah"],0]
 ];
 function buildBakatSection(){
   const questions=shuffle(BAKAT_RAW.map(([category,q,options,answer])=>{
@@ -823,7 +865,7 @@ function buildBakatSection(){
     return mc;
   }));
   return {id:'BAKAT',title:'Tes Bakat Diferensial',code:'BAKAT',module:'BAKAT',scoring:'aptitude',
-    desc:'Mengukur kecenderungan bakat di 5 rumpun untuk merekomendasikan mata pelajaran pilihan Kurikulum Merdeka.',
+    desc:'Mengukur kecenderungan bakat di 6 rumpun (termasuk rumpun keagamaan) untuk merekomendasikan mata pelajaran pilihan Kurikulum Merdeka.',
     instruction:'Kerjakan tiap soal sebaik mungkin — ini tes kemampuan (ada jawaban benar), bukan tes minat.',
     example:{q:'Contoh: Sinonim dari kata "besar" adalah ....',options:['Kecil','Raksasa','Sempit','Pendek'],answer:1},
     duration:900,
@@ -880,7 +922,12 @@ function buildSections(level,modules){
      instruction:'Temukan pola pada deret angka, lalu pilih angka selanjutnya.',
      example:{q:'Contoh: 2, 4, 8, 16, 32, ?',options:['48','64','56','60'],answer:1},
      duration:D.ZR,
-     questions:Array.from({length:20},(_,i)=>generateZR(i,level))},
+     questions: level==='sma'
+       ? shuffle(SMA_ZR_RAW.map(([seq,options,answer])=>{
+           const opts=shuffle(options.slice());
+           return {kind:'series',seq:seq.slice(),options:opts,answer:opts.indexOf(options[answer])};
+         }))
+       : Array.from({length:20},(_,i)=>generateZR(i,level))},
     {id:'FA',title:'Pemilihan Gambar',code:'FA',module:'IST',scoring:'correct',
      desc:'Menguji penalaran figural/pola visual.',
      instruction: level==='sma' ?
@@ -1298,7 +1345,7 @@ function renderWelcome(){
         modBtn('IST','Tes IST (Kecerdasan)','Verbal, numerik, figural, memori — estimasi IQ')+
         modBtn('RIASEC','Tes Minat RIASEC','36 pernyataan minat karier (model Holland)')+
         modBtn('GAYA','Tes Gaya Belajar','24 pernyataan gaya belajar Visual/Auditori/Kinestetik')+
-        modBtn('BAKAT','Tes Bakat Diferensial',selectedLevel==='sma'?'50 soal kemampuan — merekomendasikan mapel pilihan Kurikulum Merdeka':'50 soal kemampuan — mengarahkan potensi bakat & kegiatan pengembangan yang relevan')+
+        modBtn('BAKAT','Tes Bakat Diferensial',selectedLevel==='sma'?'60 soal kemampuan — merekomendasikan mapel pilihan Kurikulum Merdeka':'60 soal kemampuan — mengarahkan potensi bakat & kegiatan pengembangan yang relevan')+
       '</div>'+
     '</div>'+
     (selectedModules.IST ?

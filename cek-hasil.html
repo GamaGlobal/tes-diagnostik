@@ -43,7 +43,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWx1FS-0htyoWmfPAT8ade
 
 const RIASEC_LABELS={R:'Realistic (Praktis/Teknik)',I:'Investigative (Analitis/Riset)',A:'Artistic (Kreatif/Seni)',S:'Social (Sosial/Membantu)',E:'Enterprising (Memimpin/Wirausaha)',C:'Conventional (Terorganisir/Administratif)'};
 const GAYA_LABELS={V:'Visual',A:'Auditori',K:'Kinestetik'};
-const BAKAT_LABELS={MIPA:'Matematika & Sains (MIPA)',IPS:'Ilmu Pengetahuan Sosial (IPS)',BHS:'Bahasa & Sastra',INF:'Informatika & Logika Komputasi',VOK:'Vokasi & Keterampilan Teknis'};
+const BAKAT_LABELS={MIPA:'Matematika & Sains (MIPA)',IPS:'Ilmu Pengetahuan Sosial (IPS)',BHS:'Bahasa & Sastra',INF:'Informatika & Logika Komputasi',VOK:'Vokasi & Keterampilan Teknis',AGM:'Ilmu Keagamaan (Tafsir-Hadis-Fiqih)'};
 
 const app=document.getElementById('app');
 
@@ -134,7 +134,7 @@ function renderResult(d){
   }
 
   if(!isDash(d['Bakat Dominan'])){
-    const scores={MIPA:d['MIPA (%)'],IPS:d['IPS (%)'],BHS:d['Bahasa (%)'],INF:d['Informatika (%)'],VOK:d['Vokasi (%)']};
+    const scores={MIPA:d['MIPA (%)'],IPS:d['IPS (%)'],BHS:d['Bahasa (%)'],INF:d['Informatika (%)'],VOK:d['Vokasi (%)'],AGM:d['Keagamaan (%)']};
     html+='<div class="card">'+
       '<h3 style="font-size:1rem;">Bakat Diferensial</h3>'+
       '<p class="muted">Rumpun terkuat: <strong>'+(BAKAT_LABELS[d['Bakat Dominan']]||d['Bakat Dominan'])+'</strong></p>'+
