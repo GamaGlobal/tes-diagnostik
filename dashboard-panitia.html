@@ -90,6 +90,50 @@ function renderLoading(){
   app.innerHTML='<div class="wrap"><div class="loading">Memuat data…</div></div>';
 }
 
+// ============ PULIHKAN DARI CADANGAN ============
+// Payload di file cadangan (diunduh siswa dari tombol "Unduh Cadangan Hasil"
+// di layar "Tes Selesai") formatnya PERSIS sama dengan yang biasa dikirim
+// index.html ke Code.gs. Jadi memulihkannya cukup POST ulang payload itu ke
+// GAS_URL yang sama -- tidak perlu endpoint atau perubahan Code.gs baru.
+function bacaFilePulihkan(input){
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ document.getElementById('inpTeksPulihkan').value=String(reader.result||''); };
+  reader.onerror=()=>{ document.getElementById('pulihkanMsg').innerHTML='<span class="flag">Gagal membaca file.</span>'; };
+  reader.readAsText(file);
+}
+
+function pulihkanDariCadangan(){
+  const msgEl=document.getElementById('pulihkanMsg');
+  const raw=(document.getElementById('inpTeksPulihkan').value||'').trim();
+  if(!raw){ msgEl.innerHTML='<span class="flag">Tempel isi file cadangan dulu, atau unggah filenya.</span>'; return; }
+
+  let payload;
+  try{ payload=JSON.parse(raw); }
+  catch(e){ msgEl.innerHTML='<span class="flag">File/teks bukan JSON yang valid. Pastikan ini file cadangan asli dari tombol "Unduh Cadangan Hasil".</span>'; return; }
+
+  if(!payload || !payload.nis || !payload.nama){
+    msgEl.innerHTML='<span class="flag">Data tidak lengkap (nama/NIS tidak ditemukan) -- pastikan file cadangan tidak diedit manual.</span>';
+    return;
+  }
+  payload.status = payload.status || 'Selesai (Dipulihkan dari Cadangan)';
+  const catatanPemulihan = 'Dipulihkan manual oleh panitia via Dashboard pada ' + new Date().toLocaleString('id-ID');
+  payload.catatan = payload.catatan && payload.catatan!=='-' ? (payload.catatan + ' | ' + catatanPemulihan) : catatanPemulihan;
+
+  msgEl.innerHTML='⏳ Mengirim ke Sheet…';
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(()=>{
+      msgEl.innerHTML='<span style="color:var(--good);">✓ Hasil "'+payload.nama+'" ('+payload.nis+') berhasil dipulihkan ke Sheet. Tekan "↻ Muat Ulang" untuk melihatnya di tabel.</span>';
+      document.getElementById('inpTeksPulihkan').value='';
+      const fileInput=document.getElementById('inpFilePulihkan');
+      if(fileInput) fileInput.value='';
+    })
+    .catch(err=>{
+      msgEl.innerHTML='<span class="flag">Gagal mengirim: '+err.message+'. Coba lagi, atau periksa koneksi internet Anda (bukan jaringan sekolah).</span>';
+    });
+}
+
 function loginDash(){
   const pin=document.getElementById('inpPin').value.trim();
   if(!pin){ renderLogin('Mohon isi PIN.'); return; }
@@ -164,6 +208,14 @@ function renderDashboard(filter){
         '<div class="stat-box"><div class="num">'+stats.violations+'</div><div class="lbl">Total Catatan Pelanggaran</div></div>'+
       '</div>'+
       (stats.preRevisi>0 ? '<p class="muted" style="margin-top:10px;">⚠ <strong>'+stats.preRevisi+'</strong> hasil tidak memiliki penanda versi bank soal (kemungkinan diambil sebelum revisi item Agustus 2026) — jangan bandingkan langsung skornya dengan hasil dari bank soal versi saat ini ('+CURRENT_BANK_VERSION+').</p>' : '')+
+    '</div>'+
+    '<div class="card" id="cardPulihkan">'+
+      '<h3 style="font-size:1rem;">🩹 Pulihkan Hasil dari Cadangan</h3>'+
+      '<p class="muted" style="font-size:0.85rem;">Kalau ada siswa yang sudah selesai tes tapi hasilnya tidak muncul di tabel bawah (mis. jaringan sekolah bermasalah saat halaman "Tes Selesai" tampil), minta siswa/pengawas tekan tombol "Unduh Cadangan Hasil" di layar tes lalu kirim file .json-nya ke Anda. Tempel isinya di sini, atau unggah filenya langsung.</p>'+
+      '<input type="file" id="inpFilePulihkan" accept="application/json,.json" style="margin-bottom:10px;" onchange="bacaFilePulihkan(this)">'+
+      '<textarea id="inpTeksPulihkan" rows="4" placeholder="...atau tempel isi file cadangan (.json) di sini" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-family:monospace;font-size:0.82rem;margin-bottom:10px;"></textarea>'+
+      '<div id="pulihkanMsg" class="muted" style="min-height:18px;margin-bottom:8px;"></div>'+
+      '<button class="btn secondary" onclick="pulihkanDariCadangan()">Kirim ke Sheet</button>'+
     '</div>'+
     '<div class="card">'+
       '<div class="toolbar">'+

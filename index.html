@@ -1283,6 +1283,22 @@ document.addEventListener('copy',(e)=>{
 });
 window.addEventListener('beforeunload',(e)=>{
   if(isActiveTestPhase()){ e.preventDefault(); e.returnValue=''; }
+  else if(phase==='final' && !submitConfirmed){
+    /* siswa/pengawas sering menutup halaman "Tes Selesai" segera --
+       ini jaring pengaman terakhir sebelum hasil benar2 terkonfirmasi tersimpan. */
+    e.preventDefault(); e.returnValue='Hasil belum terkonfirmasi tersimpan ke server. Yakin ingin menutup halaman ini?';
+  }
+});
+// Jaring pengaman terakhir: kalau halaman ditutup/dinavigasi sebelum sempat
+// terkonfirmasi tersimpan (atau bahkan sebelum jitter sempat berjalan),
+// coba kirim lewat sendBeacon -- ini SATU-SATUNYA cara mengirim data yang
+// dijamin browser tetap coba proses walau halaman langsung tertutup
+// (berbeda dari fetch/setTimeout biasa yang dibatalkan begitu tab ditutup).
+window.addEventListener('pagehide', ()=>{
+  try{
+    const pending=localStorage.getItem(PENDING_KEY);
+    if(pending) beaconKirim(JSON.parse(pending));
+  }catch(e){}
 });
 
 function render(){
@@ -1846,13 +1862,71 @@ function computeResults(){
 
 let finalSaved=false;
 
+// Kirim lewat navigator.sendBeacon -- SEGERA, tanpa jitter/delay. Beda dari
+// fetch+setTimeout biasa: sendBeacon diserahkan ke browser dan tetap
+// diproses walau halaman langsung ditutup/direfresh sesaat setelahnya.
+// Inilah jaring pengaman utama untuk kasus seperti di MTsN 3: siswa/
+// pengawas menutup laptop/tab tepat setelah "Tes Selesai" muncul, sebelum
+// jitter (hingga 45 detik) atau retry fetch sempat berjalan sama sekali.
+// CATATAN: beacon ini "fire-and-forget" -- tidak bisa dipastikan sukses
+// dari sisi klien, makanya fetch+retry (saveToSheet) TETAP dijalankan
+// sebagai jalur yang benar-benar bisa dikonfirmasi (baru dari situ
+// submitConfirmed di-set true & status di layar berubah jadi ✓ Tersimpan).
+function beaconKirim(payload){
+  if(!GAS_URL || GAS_URL.indexOf('PASTE_URL')===0) return false;
+  if(!payload) return false;
+  try{
+    if(navigator.sendBeacon){
+      const blob=new Blob([JSON.stringify(payload)],{type:'text/plain;charset=UTF-8'});
+      return navigator.sendBeacon(GAS_URL, blob);
+    }
+  }catch(e){}
+  return false;
+}
+
+function updateSimpanStatus(state){
+  const el=document.getElementById('simpanStatus');
+  if(!el) return;
+  if(state==='ok'){
+    el.innerHTML='<span style="color:#2F6D3A;">✓ Hasil sudah terkonfirmasi tersimpan di server. Halaman ini aman ditutup.</span>';
+  } else if(state==='warn'){
+    el.innerHTML='<span style="color:#9A3B2E;">⚠ Server belum membalas sukses. Cadangan otomatis sudah dikirim di latar belakang, dan sistem akan terus mencoba mengirim ulang secara berkala. Mohon <strong>JANGAN tutup halaman ini dulu</strong>, atau tekan tombol "Unduh Cadangan Hasil" lalu serahkan filenya ke panitia.</span>';
+  } else {
+    el.innerHTML='<span class="muted">⏳ Menyimpan hasil ke server...</span>';
+  }
+}
+
+// Tombol jaga-jaga: cadangan lengkap hasil tes dalam 1 file .json yang bisa
+// diserahkan ke panitia untuk dimasukkan manual kalau pengiriman otomatis
+// (beacon maupun fetch+retry) sama sekali tidak berhasil -- mis. karena
+// jaringan sekolah memblokir script.google.com. Isi filenya PERSIS sama
+// dengan payload yang biasanya dikirim ke Code.gs, jadi panitia tinggal
+// tempel isinya ke kotak "Pulihkan dari Cadangan" di dashboard-panitia.html.
+function unduhCadanganHasil(){
+  try{
+    const blob=new Blob([JSON.stringify(lastResults,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const namaFile=('cadangan-hasil_'+(studentNIS||studentName||'siswa')+'_'+Date.now()+'.json').replace(/\s+/g,'-');
+    a.href=url; a.download=namaFile;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('Gagal membuat file cadangan: '+e.message); }
+}
+
 function renderFinal(){
   computeResults();
   lastResults.status='Selesai Normal';
   if(!finalSaved){
     finalSaved=true;
-    // cadangkan dulu segera (tidak ikut ditunda), baru pengiriman ke server-nya yang di-jitter
+    // cadangkan dulu segera (tidak ikut ditunda) -- ini yang dibaca ulang
+    // oleh resendPendingIfAny() kalau halaman ini dibuka lagi nanti.
     try{ localStorage.setItem(PENDING_KEY, JSON.stringify(lastResults)); }catch(e){}
+    // jaring pengaman pertama: kirim SEGERA lewat beacon, tidak menunggu jitter.
+    beaconKirim(lastResults);
+    // jalur konfirmasi: fetch+retry seperti sebelumnya, tetap pakai jitter
+    // supaya beban ke Apps Script tersebar kalau banyak peserta selesai
+    // bersamaan (lihat catatan di SUBMIT_JITTER_MAX_MS).
     const jitterMs=Math.floor(Math.random()*SUBMIT_JITTER_MAX_MS);
     setTimeout(saveToSheet, jitterMs);
   }
@@ -1865,13 +1939,17 @@ function renderFinal(){
       '<h1>Tes Selesai</h1>'+
       '<p class="muted">Terima kasih, '+studentName+'. Jawaban Anda telah tercatat.</p>'+
       '<p class="muted" style="margin-top:6px;">Hasil tes akan disampaikan oleh panitia/pengawas.</p>'+
+      '<p id="simpanStatus" style="margin-top:12px;font-size:0.88rem;"></p>'+
     '</div>'+
     '<p class="disclaimer">Catatan: Asesmen ini disusun oleh LBB Gama Global dengan mengacu pada prinsip-prinsip tes IST, RIASEC, dan gaya belajar VAK. Hasil yang tertera merupakan estimasi hasil olahan internal untuk tujuan pemetaan potensi dan minat, bukan skor psikometri resmi bersertifikat.</p>'+
+    '<button class="btn block secondary" style="margin-top:10px;" onclick="unduhCadanganHasil()">⬇ Unduh Cadangan Hasil (jaga-jaga)</button>'+
     '<button class="btn block secondary" style="margin-top:10px;" onclick="location.reload()">Selesai</button>'+
   '</div>';
+  updateSimpanStatus(submitConfirmed ? 'ok' : 'loading');
 }
 
 let lastResults=null;
+let submitConfirmed=false; /* true hanya kalau server benar2 membalas sukses (bukan sekadar beacon terkirim) */
 const PENDING_KEY='pendingResultSubmission_v1';
 
 function saveToSheet(){
@@ -1888,6 +1966,11 @@ function sendResultWithRetry_(payload, attemptsLeft){
     .then(()=>{
       console.log('Hasil berhasil dikirim ke Google Sheets.');
       try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
+      // hanya di jalur INI (fetch yang benar2 dibalas server) status dianggap
+      // terkonfirmasi -- beacon di beaconKirim() tidak bisa dipastikan sukses,
+      // jadi tidak boleh jadi dasar submitConfirmed.
+      submitConfirmed=true;
+      updateSimpanStatus('ok');
     })
     .catch(err=>{
       console.warn('Gagal mengirim hasil (percobaan tersisa: '+attemptsLeft+'):', err);
@@ -1897,6 +1980,8 @@ function sendResultWithRetry_(payload, attemptsLeft){
         // server mungkin sedang sangat sibuk — jangan menyerah, coba lagi tiap 25 detik di background
         // selama halaman ini masih terbuka, sambil tetap simpan cadangan di localStorage.
         console.warn('Masuk mode retry background, akan dicoba lagi tiap 25 detik...');
+        updateSimpanStatus('warn');
+        beaconKirim(payload); // coba jalur beacon lagi juga, siapa tahu fetch yang bermasalah bukan jaringannya
         setTimeout(()=>sendResultWithRetry_(payload, 1), 25000);
       }
     });
