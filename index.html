@@ -1963,14 +1963,30 @@ function saveToSheet(){
 
 function sendResultWithRetry_(payload, attemptsLeft){
   fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(()=>{
-      console.log('Hasil berhasil dikirim ke Google Sheets.');
-      try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
-      // hanya di jalur INI (fetch yang benar2 dibalas server) status dianggap
-      // terkonfirmasi -- beacon di beaconKirim() tidak bisa dipastikan sukses,
-      // jadi tidak boleh jadi dasar submitConfirmed.
-      submitConfirmed=true;
-      updateSimpanStatus('ok');
+    .then(r=>r.json())
+    .then(data=>{
+      // PENTING: Code.gs selalu membalas HTTP 200 walau gagal secara internal
+      // (mis. LockService timeout "Server sedang sibuk..." saat banyak peserta
+      // submit bersamaan) -- errornya ditangkap di try/catch doPost() lalu
+      // dibalas sbg {status:'error',...} tetap dgn kode 200. Kalau di sini cuma
+      // cek fetch() tidak reject (tanpa baca isi JSON-nya), balasan error itu
+      // akan salah dianggap sukses -- inilah penyebab kasus hasil "Selesai" di
+      // LiveMonitor tapi tidak ada baris di sheet Hasil Tes Diagnostik (mis.
+      // di MTsN 3 Bekasi). Makanya WAJIB cek data.status di sini.
+      if(data && data.status==='success'){
+        console.log('Hasil berhasil dikirim ke Google Sheets.');
+        try{ localStorage.removeItem(PENDING_KEY); }catch(e){}
+        // hanya di jalur INI (fetch yang benar2 dibalas server DENGAN status
+        // sukses) status dianggap terkonfirmasi -- beacon di beaconKirim()
+        // tidak bisa dipastikan sukses, jadi tidak boleh jadi dasar submitConfirmed.
+        submitConfirmed=true;
+        updateSimpanStatus('ok');
+      } else {
+        // server membalas tapi GAGAL memproses -- perlakukan sama seperti gagal
+        // jaringan supaya masuk jalur retry/backup di bawah, JANGAN dihapus dari
+        // PENDING_KEY dan JANGAN ditandai submitConfirmed.
+        throw new Error((data && data.message) || 'Server membalas tanpa status sukses.');
+      }
     })
     .catch(err=>{
       console.warn('Gagal mengirim hasil (percobaan tersisa: '+attemptsLeft+'):', err);
